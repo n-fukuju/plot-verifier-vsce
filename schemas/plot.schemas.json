@@ -1,0 +1,23 @@
+{
+    "type": "object",
+    "properties": {
+        "title": { "type": "string", "description": "タイトル" },
+        "description": { "type": "string", "description": "概要" },
+        "chapters": {
+            "type": "array",
+            "description": "章立て",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "file": { "type": "string", "description": "ファイルパス" },
+                    "deadline": { "type": "string", "description": "期日" },
+                    "maximum": { "type": "string", "description": "最大" },
+                    "minimum": { "type": "string", "description": "最小"},
+                    "conditions": { "type": "array", "description": "条件", "items": {"type": "string"}}
+                },
+                "required": ["file"]
+            }
+        }
+    },
+    "required": ["chapters"]
+}
