@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
+import * as readline from 'readline';
 import * as json from 'jsonc-parser';
 
 /** プロット検証ツリープロバイダ */
@@ -294,7 +295,7 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
     }
 
     /** ファイルサイズの確認を行う */
-    private compareFileSizeRecurse(chapter:Chapter, max:boolean, fsPath:string)
+    private async compareFileSizeRecurse(chapter:Chapter, max:boolean, fsPath:string)
     {
         // 指定されている場合のみ処理
         if(!(max && chapter.maximum) && !(!max && chapter.minimum)){ return; }
@@ -367,36 +368,48 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
         else if(matchPage)
         {
             let page = Number(matchPage[1]);
+            let textCount = 0;
             let pageCount = 0;
             let rowCount = 0;
+            // let percentage = 0;
+            // let percentageStr = "";
             const col = 20;
             const row = 20;
-            const text = fs.readFileSync(fsPath).toString('utf8');
-            for(const line of text.split(os.EOL))
+            // const text = fs.readFileSync(fsPath).toString('utf8');
+            // for(const line of text.split(os.EOL))
+            // {
+            //     rowCount += Math.ceil(line.length / col);
+            // }
+            const stream = fs.createReadStream(fsPath);
+            for await(const line of readline.createInterface({input:stream, crlfDelay: Infinity}))
             {
+                textCount += line.length;
                 rowCount += Math.ceil(line.length / col);
             }
             pageCount = Math.ceil(rowCount / row);
-            console.log(`length: ${text.length},  page: ${page},  rowCount: ${rowCount},  pageCount: ${pageCount}`);
+            // percentage = pageCount / page;
+            // for(let i=1; i<11; i++){ percentageStr += (percentage * 10 > i)?"#":" "; }
+            // console.log(`length: ${text.length},  page: ${page},  rowCount: ${rowCount},  pageCount: ${pageCount}`);
+            console.log(`length: ${textCount},  page: ${page},  rowCount: ${rowCount},  pageCount: ${pageCount}`);
 
             if(max){
                 element.label = `最大 ${page}枚`;
                 if(pageCount > page){
                     element.isError = true;
-                    element.description = `現在 ${pageCount}枚`;
+                    element.description = `現在 ${pageCount}枚（${textCount}字）`;
                 } else {
                     const remain = page - pageCount;
-                    element.description = `現在 ${pageCount}枚,  残り ${remain}枚`;
+                    element.description = `現在 ${pageCount}枚（${textCount}字）,  残り ${remain}枚`;
                 }
             } else {
                 element.label = `最低 ${page}枚`;
                 if(pageCount >= page)
                 {
-                    element.description = `現在 ${pageCount}枚`;
+                    element.description = `現在 ${pageCount}枚（${textCount}字）`;
                 } else {
                     const remain = page - pageCount;
                     element.isError = true;
-                    element.description = `現在 ${pageCount}枚,  残り ${remain}枚`;
+                    element.description = `現在 ${pageCount}枚（${textCount}字）,  残り ${remain}枚`;
                 }
             }
         }
@@ -405,26 +418,32 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
         else if(matchChars || matchCount)
         {
             const chars = (matchChars)? Number(matchChars[1]): Number(matchCount[1]);
-            const text = fs.readFileSync(fsPath).toString('utf8');
-            console.log(`length: ${text.length}, chars: ${chars}`);
+            let textCount = 0;
+            // const text = fs.readFileSync(fsPath).toString('utf8');
+            const stream = fs.createReadStream(fsPath);
+            for await(const line of readline.createInterface({input:stream, crlfDelay: Infinity}))
+            {
+                textCount += line.length;
+            }
+            console.log(`length: ${textCount}, chars: ${chars}`);
 
             if(max){
                 element.label = `最大 ${chars}字`;
-                if(text.length > chars){
+                if(textCount > chars){
                     element.isError = true;
-                    element.description = `現在 ${text.length}字`
+                    element.description = `現在 ${textCount}字`
                 } else {
-                    const remain = chars - text.length;
-                    element.description = `現在 ${text.length}字,  残り ${remain}字`;
+                    const remain = chars - textCount;
+                    element.description = `現在 ${textCount}字,  残り ${remain}字`;
                 }
             } else {
                 element.label = `最低 ${chars}字`;
-                if(text.length >= chars){
-                    element.description = `現在 ${text.length}字`;
+                if(textCount >= chars){
+                    element.description = `現在 ${textCount}字`;
                 } else {
-                    const remain = chars - text.length;
+                    const remain = chars - textCount;
                     element.isError = true;
-                    element.description = `現在 ${text.length}枚,  残り ${remain}字`;
+                    element.description = `現在 ${textCount}枚,  残り ${remain}字`;
                 }
             }
         }
