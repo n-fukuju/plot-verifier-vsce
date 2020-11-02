@@ -10,59 +10,141 @@
 		"Other"
 	],
 	"activationEvents": [
-		"workspaceContains:plot.json",
-		"plot-verifier-vsce.refresh"
+		"onStartupFinished"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
 		"commands": [
 			{
 				"command": "plot-verifier-vsce.refresh",
-				"title": "refresh",
+				"title": "更新",
 				"icon": {
 					"light": "resources/light/reload.svg",
 					"dark": "resources/dark/reload.svg"
 				}
 			},
 			{
-				"command": "plot-verifier-vsce.edit",
-				"title": "edit",
+				"command": "plot-verifier-vsce.regist",
+				"title": "ファイルを登録する",
+				"icon": {
+					"light": "resources/light/blankPaper.svg",
+					"dark": "resources/dark/blankPaper.svg"
+				}
+			},
+			{
+				"command": "plot-verifier-vsce.unregist",
+				"title": "登録を解除する",
+				"icon": "resources/color/cross.svg"
+			},
+			{
+				"command": "plot-verifier-vsce.open",
+				"title": "エディタでファイルを開く",
 				"icon": {
 					"light": "resources/light/edit.svg",
 					"dark": "resources/dark/edit.svg"
 				}
 			},
 			{
+				"command": "plot-verifier-vsce.add",
+				"title": "項目を追加する",
+				"icon": {
+					"light": "resources/light/plus.svg",
+					"dark": "resources/dark/plus.svg"
+				}
+			},
+			{
+				"command": "plot-verifier-vsce.input",
+				"title": "更新する",
+				"icon": {
+					"light": "resources/light/pencil.svg",
+					"dark": "resources/dark/pencil.svg"
+				}
+			},
+			{
+				"command": "plot-verifier-vsce.remove",
+				"title": "項目を削除する",
+				"icon": "resources/color/cross.svg"
+			},
+			{
+				"command": "plot-verifier-vsce.moveUp",
+				"title": "ファイルを上へ移動する",
+				"icon": {
+					"light": "resources/light/arrowUp.svg",
+					"dark": "resources/dark/arrowUp.svg"
+				}
+			},
+			{
+				"command": "plot-verifier-vsce.moveDown",
+				"title": "ファイルを下へ移動する",
+				"icon": {
+					"light": "resources/light/arrowDown.svg",
+					"dark": "resources/dark/arrowDown.svg"
+				}
+			},
+			{
 				"command": "plot-verifier-vsce.select",
-				"title": "select",
+				"title": "select（削除予定）",
 				"icon": {
 					"light": "resources/light/alert.svg",
 					"dark": "resources/dark/alert.svg"
 				}
 			}
 		],
-		"menus": {
-			"view/title": [
-				{
-					"command": "plot-verifier-vsce.refresh",
-					"when": "view == plotVerifier",
-					"group": "navigation"
-				}
-			],
-			"view/item/context": [
-				{
-					"command": "plot-verifier-vsce.edit",
-					"when": "view == plotVerifier && viewItem == chapter",
-					"group": "inline"
-				}
-			]
-		},
 		"views": {
 			"explorer": [
 				{
 					"id": "plotVerifier",
 					"name": "プロット検証",
 					"when": "plotVerifierEnabled"
+				}
+			]
+		},
+		"menus": {
+			"view/title": [
+				{
+					"command": "plot-verifier-vsce.refresh",
+					"when": "view == plotVerifier",
+					"group": "navigation"
+				},
+				{
+					"command": "plot-verifier-vsce.regist",
+					"when": "view == plotVerifier",
+					"group": "navigation"
+				}
+			],
+			"view/item/context": [
+				{
+					"command": "plot-verifier-vsce.open",
+					"when": "view == plotVerifier && viewItem == chapter",
+					"group": "inline"
+				},
+				{ "command": "plot-verifier-vsce.moveUp", "when": "view==plotVerifier && viewItem==chapter", "group": "inline" },
+				{ "command": "plot-verifier-vsce.moveDown", "when": "view==plotVerifier && viewItem==chapter", "group": "inline" },
+				{ "command": "plot-verifier-vsce.moveUp", "when": "view==plotVerifier && viewItem==minimum", "group": "inline" },
+				{ "command": "plot-verifier-vsce.moveDown", "when": "view==plotVerifier && viewItem==minimum", "group": "inline" },
+				{ "command": "plot-verifier-vsce.moveUp", "when": "view==plotVerifier && viewItem==maximum", "group": "inline" },
+				{ "command": "plot-verifier-vsce.moveDown", "when": "view==plotVerifier && viewItem==maximum", "group": "inline" },
+				{ "command": "plot-verifier-vsce.moveUp", "when": "view==plotVerifier && viewItem==condition", "group": "inline" },
+				{ "command": "plot-verifier-vsce.moveDown", "when": "view==plotVerifier && viewItem==condition", "group": "inline" },
+				{
+					"command": "plot-verifier-vsce.unregist",
+					"when": "view == plotVerifier && viewItem == chapter",
+					"group": "inline"
+				},
+				{
+					"command": "plot-verifier-vsce.add",
+					"when": "view == plotVerifier && viewItem == chapter",
+					"group": "inline"
+				},
+				{
+					"command": "plot-verifier-vsce.input",
+					"when": "view == plotVerifier && viewItem != chapter",
+					"group": "inline"
+				},
+				{
+					"command": "plot-verifier-vsce.remove",
+					"when": "view == plotVerifier && viewItem != chapter",
+					"group": "inline"
 				}
 			]
 		}

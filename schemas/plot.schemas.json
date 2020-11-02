@@ -1,8 +1,6 @@
 {
     "type": "object",
     "properties": {
-        "title": { "type": "string", "description": "タイトル" },
-        "description": { "type": "string", "description": "概要" },
         "chapters": {
             "type": "array",
             "description": "章立て",
