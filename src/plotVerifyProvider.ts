@@ -1,9 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import * as os from 'os';
 import * as readline from 'readline';
-import * as json from 'jsonc-parser';
 
 /** プロット検証ツリープロバイダ */
 export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
@@ -18,8 +16,8 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
     private autoRefresh = true;
 
     constructor(private context: vscode.ExtensionContext){
-        vscode.window.onDidChangeActiveTextEditor(() => this.onActiveEditorChanged());
-        vscode.workspace.onDidChangeTextDocument(e => this.onDocumentChanged(e));
+        // vscode.window.onDidChangeActiveTextEditor(() => this.onActiveEditorChanged());
+        // vscode.workspace.onDidChangeTextDocument(e => this.onDocumentChanged(e));
 
         // TODO AutoRefresh を設定から取得する。
         // this.autoRefresh = vscode.workspace.getConfiguration('jsonOutline').get('autorefresh');
@@ -674,22 +672,20 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
         }
     }
     
-    /** アクティブなエディタの切り替えイベント */
-    private onActiveEditorChanged(): void
-    {
-        // TODO 実装
-    }
+    // /** アクティブなエディタの切り替えイベント */
+    // private onActiveEditorChanged(): void
+    // {
+    // }
 
-    private onDocumentChanged(changeEvent: vscode.TextDocumentChangeEvent): void
-    {
-        // TODO 実装
-    }
+    // private onDocumentChanged(changeEvent: vscode.TextDocumentChangeEvent): void
+    // {
+    // }
 
     /** 読み込み */
     private async getPlot(refresh=false): Promise<void>
     {
 		// ワークスペース内のすべてのルートフォルダ
-		// vscode.workspace.workspaceFolders
+        // vscode.workspace.workspaceFolders
 
         this.plot = null;
         // TODO フォルダ取得の処理を書き込み側に合わせる
@@ -704,15 +700,22 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
 			if(folder){
 				const plotFile = vscode.Uri.joinPath(folder.uri, 'plot.json');
                 console.log('plot-verifier:: plot.json:', plotFile);
-                // 存在しなければ、空ファイルを作成する
-                if(!fs.existsSync(plotFile.fsPath)){
-                    fs.writeFileSync(plotFile.fsPath, Plot.forEmpty());
-                    vscode.window.showWarningMessage("空の定義ファイルを生成しました（plot.json not found）", plotFile.fsPath);
+                // 存在する場合のみ読み込み
+                let plot = '{"chapters":[]}';
+                if(fs.existsSync(plotFile.fsPath))
+                {
+                    const plotData = await vscode.workspace.fs.readFile(plotFile);
+                    plot = Buffer.from(plotData).toString('utf8');
                 }
+                // if(!fs.existsSync(plotFile.fsPath)){
+                //     fs.writeFileSync(plotFile.fsPath, Plot.forEmpty());
+                //     vscode.window.showInformationMessage("空の定義ファイルを生成しました (0x0)", plotFile.fsPath);
+                // }
                 
 				// ファイル読み込み
-                const plotData = await vscode.workspace.fs.readFile(plotFile);
-				const plot = Buffer.from(plotData).toString('utf8');
+                // const plotData = await vscode.workspace.fs.readFile(plotFile);
+                // const plot = Buffer.from(plotData).toString('utf8');
+                
                 // vscode.window.showInformationMessage(plot);
                 // this.text = plot;
                 // this.tree = json.parseTree(this.text);
@@ -773,6 +776,16 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
         if(vscode.workspace.workspaceFolders?.length > 0)
         {
             return vscode.workspace.workspaceFolders[0].uri.fsPath;
+        }
+    }
+
+    getPlotFile():vscode.Uri|undefined
+    {
+        const folder = this.getFolder();
+        if(folder)
+        {
+            const folderUri = vscode.Uri.file(folder);
+            return vscode.Uri.joinPath(folderUri, 'plot.json');
         }
     }
 
@@ -923,7 +936,7 @@ class Plot
         return;
     }
 
-    /** シリアライズ用の文字列を返す */
+    /** シリアライズ用のJSON文字列を返す */
     forSerialize()
     {
         let chapters = [];
@@ -942,16 +955,6 @@ class Plot
             // "title": this.title,
             // "description": this.description,
             'chapters': chapters
-        }, null, 4);
-    }
-    
-    /** 空ファイル用の文字列を返す */
-    static forEmpty()
-    {
-        return JSON.stringify({
-            // "title": "<タイトル>",
-            // "description": "<概要>",
-            'chapters': []
         }, null, 4);
     }
 
@@ -1098,7 +1101,7 @@ class Chapter
                 }
                 break;
             case ElementType.MAXIMUM:
-                index1 = this.minimumElements.indexOf(element);
+                index1 = this.maximumElements.indexOf(element);
                 if(this.movable(index1, this.maximumElements.length, up))
                 {
                     index2 = this.properties.indexOf(element);

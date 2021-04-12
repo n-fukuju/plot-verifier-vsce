@@ -1,8 +1,15 @@
 {
-	"name": "plot-verifier-vsce",
-	"displayName": "プロット検証",
+	"name": "plot-verifier",
+	"displayName": "プロット検証するやつ（仮称）",
 	"description": "プロット通りに物書きができているか検証する。",
 	"version": "0.0.1",
+	"publisher": "n-fukuju",
+	"icon": "images/icon.png",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/n-fukuju/plot-verifier-vsce"
+	},
+	"license": "MIT",
 	"engines": {
 		"vscode": "^1.50.0"
 	},
@@ -155,7 +162,9 @@
 		"lint": "eslint src --ext ts",
 		"watch": "tsc -watch -p ./",
 		"pretest": "npm run compile && npm run lint",
-		"test": "node ./out/test/runTest.js"
+		"test": "node ./out/test/runTest.js",
+		"package": "vsce package",
+		"installx": "code --install-extension ./plot-verifier-0.0.1.vsix"
 	},
 	"devDependencies": {
 		"@types/vscode": "^1.50.0",
