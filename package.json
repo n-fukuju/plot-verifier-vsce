@@ -125,14 +125,46 @@
 					"when": "view == plotVerifier && viewItem == chapter",
 					"group": "inline"
 				},
-				{ "command": "plot-verifier-vsce.moveUp", "when": "view==plotVerifier && viewItem==chapter", "group": "inline" },
-				{ "command": "plot-verifier-vsce.moveDown", "when": "view==plotVerifier && viewItem==chapter", "group": "inline" },
-				{ "command": "plot-verifier-vsce.moveUp", "when": "view==plotVerifier && viewItem==minimum", "group": "inline" },
-				{ "command": "plot-verifier-vsce.moveDown", "when": "view==plotVerifier && viewItem==minimum", "group": "inline" },
-				{ "command": "plot-verifier-vsce.moveUp", "when": "view==plotVerifier && viewItem==maximum", "group": "inline" },
-				{ "command": "plot-verifier-vsce.moveDown", "when": "view==plotVerifier && viewItem==maximum", "group": "inline" },
-				{ "command": "plot-verifier-vsce.moveUp", "when": "view==plotVerifier && viewItem==condition", "group": "inline" },
-				{ "command": "plot-verifier-vsce.moveDown", "when": "view==plotVerifier && viewItem==condition", "group": "inline" },
+				{
+					"command": "plot-verifier-vsce.moveUp",
+					"when": "view==plotVerifier && viewItem==chapter",
+					"group": "inline"
+				},
+				{
+					"command": "plot-verifier-vsce.moveDown",
+					"when": "view==plotVerifier && viewItem==chapter",
+					"group": "inline"
+				},
+				{
+					"command": "plot-verifier-vsce.moveUp",
+					"when": "view==plotVerifier && viewItem==minimum",
+					"group": "inline"
+				},
+				{
+					"command": "plot-verifier-vsce.moveDown",
+					"when": "view==plotVerifier && viewItem==minimum",
+					"group": "inline"
+				},
+				{
+					"command": "plot-verifier-vsce.moveUp",
+					"when": "view==plotVerifier && viewItem==maximum",
+					"group": "inline"
+				},
+				{
+					"command": "plot-verifier-vsce.moveDown",
+					"when": "view==plotVerifier && viewItem==maximum",
+					"group": "inline"
+				},
+				{
+					"command": "plot-verifier-vsce.moveUp",
+					"when": "view==plotVerifier && viewItem==condition",
+					"group": "inline"
+				},
+				{
+					"command": "plot-verifier-vsce.moveDown",
+					"when": "view==plotVerifier && viewItem==condition",
+					"group": "inline"
+				},
 				{
 					"command": "plot-verifier-vsce.unregist",
 					"when": "view == plotVerifier && viewItem == chapter",
@@ -167,16 +199,17 @@
 		"installx": "code --install-extension ./plot-verifier-0.0.1.vsix"
 	},
 	"devDependencies": {
-		"@types/vscode": "^1.50.0",
 		"@types/glob": "^7.1.3",
 		"@types/mocha": "^8.0.0",
 		"@types/node": "^12.11.7",
-		"eslint": "^7.9.0",
+		"@types/vscode": "^1.50.0",
 		"@typescript-eslint/eslint-plugin": "^4.1.1",
 		"@typescript-eslint/parser": "^4.1.1",
+		"eslint": "^7.9.0",
 		"glob": "^7.1.6",
 		"mocha": "^8.1.3",
 		"typescript": "^4.0.2",
+		"vsce": "^1.87.1",
 		"vscode-test": "^1.4.0"
 	},
 	"dependencies": {
