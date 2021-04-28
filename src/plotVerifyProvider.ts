@@ -688,62 +688,82 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
         // vscode.workspace.workspaceFolders
 
         this.plot = null;
-        // TODO フォルダ取得の処理を書き込み側に合わせる
-		// 現在開いているエディタのフォルダにアクセスする。
-        const editor = vscode.window.activeTextEditor;
-		const resource = editor?.document.uri;
-		if(resource?.scheme === 'file')
-		{
-			const folder = vscode.workspace.getWorkspaceFolder(resource);
-			console.log('plot-verifier:: activeFolder: ', folder);
-			
-			if(folder){
-				const plotFile = vscode.Uri.joinPath(folder.uri, 'plot.json');
-                console.log('plot-verifier:: plot.json:', plotFile);
-                // 存在する場合のみ読み込み
-                let plot = '{"chapters":[]}';
-                if(fs.existsSync(plotFile.fsPath))
-                {
-                    const plotData = await vscode.workspace.fs.readFile(plotFile);
-                    plot = Buffer.from(plotData).toString('utf8');
-                }
-                // if(!fs.existsSync(plotFile.fsPath)){
-                //     fs.writeFileSync(plotFile.fsPath, Plot.forEmpty());
-                //     vscode.window.showInformationMessage("空の定義ファイルを生成しました (0x0)", plotFile.fsPath);
-                // }
-                
-				// ファイル読み込み
-                // const plotData = await vscode.workspace.fs.readFile(plotFile);
-                // const plot = Buffer.from(plotData).toString('utf8');
-                
-                // vscode.window.showInformationMessage(plot);
-                // this.text = plot;
-                // this.tree = json.parseTree(this.text);
-                // TODO 切り替え json.parse()
-                // JSON処理
-
-                // const p:Plot = json.parse(this.text);
-                // const p = new Plot(folder, JSON.parse(this.text));
-                const p = new Plot(folder, JSON.parse(plot));
-                this.plot = p;
-                console.log("json.parse(): ", p);
-                // ファイル読み込み中に、初回表示が過ぎてしまうため、明示的に呼び出し。
-                if(refresh){
-                    this._onDidChangeTreeData.fire(undefined);
-                }
-			}
+        
+        const plotFile = this.getPlotFile();
+        if(plotFile){
+            let plot = '{"chapters":[]}';
+            if(fs.existsSync(plotFile.fsPath))
+            {
+                const plotData = await vscode.workspace.fs.readFile(plotFile);
+                plot = Buffer.from(plotData).toString('utf8');
+            }
+            const p = new Plot(this.getWorkspaceFolder(), JSON.parse(plot));
+            this.plot = p;
+            console.log("json.parse(): ", p);
+            // ファイル読み込み中に、初回表示が過ぎてしまうため、明示的に呼び出し。
+            if(refresh){
+                this._onDidChangeTreeData.fire(undefined);
+            }
+        }else{
+            throw 'plotファイルを開けませんでした。';
         }
+
+		// // 現在開いているエディタのフォルダにアクセスする。
+        // const editor = vscode.window.activeTextEditor;
+		// const resource = editor?.document.uri;
+		// if(resource?.scheme === 'file')
+		// {
+		// 	const folder = vscode.workspace.getWorkspaceFolder(resource);
+		// 	console.log('plot-verifier:: activeFolder: ', folder);
+			
+		// 	if(folder){
+		// 		const plotFile = vscode.Uri.joinPath(folder.uri, 'plot.json');
+        //         console.log('plot-verifier:: plot.json:', plotFile);
+        //         // 存在する場合のみ読み込み
+        //         let plot = '{"chapters":[]}';
+        //         if(fs.existsSync(plotFile.fsPath))
+        //         {
+        //             const plotData = await vscode.workspace.fs.readFile(plotFile);
+        //             plot = Buffer.from(plotData).toString('utf8');
+        //         }
+        //         // if(!fs.existsSync(plotFile.fsPath)){
+        //         //     fs.writeFileSync(plotFile.fsPath, Plot.forEmpty());
+        //         //     vscode.window.showInformationMessage("空の定義ファイルを生成しました (0x0)", plotFile.fsPath);
+        //         // }
+                
+		// 		// ファイル読み込み
+        //         // const plotData = await vscode.workspace.fs.readFile(plotFile);
+        //         // const plot = Buffer.from(plotData).toString('utf8');
+                
+        //         // vscode.window.showInformationMessage(plot);
+        //         // this.text = plot;
+        //         // this.tree = json.parseTree(this.text);
+        //         // TODO 切り替え json.parse()
+        //         // JSON処理
+
+        //         // const p:Plot = json.parse(this.text);
+        //         // const p = new Plot(folder, JSON.parse(this.text));
+        //         const p = new Plot(folder, JSON.parse(plot));
+        //         this.plot = p;
+        //         console.log("json.parse(): ", p);
+        //         // ファイル読み込み中に、初回表示が過ぎてしまうため、明示的に呼び出し。
+        //         if(refresh){
+        //             this._onDidChangeTreeData.fire(undefined);
+        //         }
+		// 	}
+        // }
     }
 
     /** 書き込み */
     private async setPlot()
     {
-        const folder = this.getFolder();
-        if(folder)
+        // const folder = this.getFolder();
+        const plotFile = this.getPlotFile();
+        if(plotFile)
         {
-            // TODO prot.json のパスを共通化する
-            const folderUri = vscode.Uri.file(folder);
-            const plotFile = vscode.Uri.joinPath(folderUri, 'plot.json');
+            // // TODO prot.json のパスを共通化する
+            // const folderUri = vscode.Uri.file(folder);
+            // const plotFile = vscode.Uri.joinPath(folderUri, 'plot.json');
 
             // 書き込み
             await vscode.workspace.fs.writeFile(plotFile, Buffer.from(this.plot.forSerialize()));
@@ -760,6 +780,28 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
      */
     getFolder():string|undefined
     {
+        // // 現在開いているエディタのフォルダ
+        // const editor = vscode.window.activeTextEditor;
+        // const resource = editor?.document.uri;
+        // if(resource?.scheme === 'file')
+        // {
+        //     const folder = vscode.workspace.getWorkspaceFolder(resource);
+        //     if(folder)
+        //     {
+        //         return folder.uri.fsPath;
+        //     }
+        // }
+
+        // // 現在開いているフォルダの先頭
+        // if(vscode.workspace.workspaceFolders?.length > 0)
+        // {
+        //     return vscode.workspace.workspaceFolders[0].uri.fsPath;
+        // }
+        return this.getWorkspaceFolder().uri.fsPath;
+    }
+
+    getWorkspaceFolder():vscode.WorkspaceFolder
+    {
         // 現在開いているエディタのフォルダ
         const editor = vscode.window.activeTextEditor;
         const resource = editor?.document.uri;
@@ -768,14 +810,14 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
             const folder = vscode.workspace.getWorkspaceFolder(resource);
             if(folder)
             {
-                return folder.uri.fsPath;
+                return folder;
             }
         }
 
         // 現在開いているフォルダの先頭
         if(vscode.workspace.workspaceFolders?.length > 0)
         {
-            return vscode.workspace.workspaceFolders[0].uri.fsPath;
+            return vscode.workspace.workspaceFolders[0];
         }
     }
 
