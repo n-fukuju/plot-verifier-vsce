@@ -74,7 +74,7 @@
 			},
 			{
 				"command": "plot-verifier-vsce.moveUp",
-				"title": "ファイルを上へ移動する",
+				"title": "上へ移動する",
 				"icon": {
 					"light": "resources/light/arrowUp.svg",
 					"dark": "resources/dark/arrowUp.svg"
@@ -82,7 +82,7 @@
 			},
 			{
 				"command": "plot-verifier-vsce.moveDown",
-				"title": "ファイルを下へ移動する",
+				"title": "下へ移動する",
 				"icon": {
 					"light": "resources/light/arrowDown.svg",
 					"dark": "resources/dark/arrowDown.svg"
