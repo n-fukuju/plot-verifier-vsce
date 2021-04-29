@@ -6,12 +6,13 @@
 
 
 ## 文字数確認の例
-エクスプローラから、「ファイルを登録」します  。
+エクスプローラから、「ファイルを登録」します。  
 ![file1](https://github.com/n-fukuju/plot-verifier-vsce/raw/master/images/feature-file1.png)  
 
 追加されたファイルのメニューから、「項目を追加」します。  
 追加する項目は、今回の例では「最小」です。  
 ![file2](https://github.com/n-fukuju/plot-verifier-vsce/raw/master/images/feature-file2.png)  
+  
 ![file3](https://github.com/n-fukuju/plot-verifier-vsce/raw/master/images/feature-file3.png)  
 
 ファイルに対する検証項目として、最低ラインが登録されます。  
@@ -21,8 +22,10 @@
 検証値を変えるため、メニューから「更新」します。  
 今回は、25枚（400字詰め換算）とします。  
 ![file5](https://github.com/n-fukuju/plot-verifier-vsce/raw/master/images/feature-file5.png)  
+  
 ![file6](https://github.com/n-fukuju/plot-verifier-vsce/raw/master/images/feature-file6.png)  
 ファイル内容が不足するため、チェックマークが消えます。  
+  
 ![file7](https://github.com/n-fukuju/plot-verifier-vsce/raw/master/images/feature-file7.png)  
 
 
