@@ -642,22 +642,9 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
     {
         // 指定されている場合のみ処理
         if(chapter.conditionElements.length < 1){ return; }
-
-        // const text = fs.readFileSync(fsPath).toString('utf8');
-        // for(const element of chapter.conditionElements)
-        // {
-        //     let match = text.match(element.value);
-        //     element.label = element.value;
-        //     if(!match)
-        //     {
-        //         element.isError = true;
-        //     }
-        // }
         
-        // TODO 毎回ファイル先頭から確認しているので、処理を見直す
         for(const element of chapter.conditionElements)
         {
-            // let dt = Date();
             element.label = element.value;
             element.isError = true;
             for await(const line of readline.createInterface({input: fs.createReadStream(fsPath), crlfDelay: Infinity}))
@@ -669,6 +656,8 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
                     break;
                 }
             }
+            // 表示を更新する
+            this._onDidChangeTreeData.fire(undefined);
         }
     }
     
