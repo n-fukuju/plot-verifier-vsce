@@ -48,7 +48,7 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
         if(element)
         {
             // 引数が Chapter の場合、プロパティ一覧を返す
-            if(element.type == ElementType.CHAPETER)
+            if(element.type === ElementType.chapter)
             {
                 const chapter:Chapter = element.value as Chapter;
                 return Promise.resolve(chapter.properties);
@@ -94,7 +94,7 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
         // if(element.type == ElementType.CHAPETER)
         switch(element.type)
         {
-            case ElementType.CHAPETER:
+            case ElementType.chapter:
                 const chapter:Chapter = element.value as Chapter;
                 // let chapterItem = new vscode.TreeItem(chapter.file, vscode.TreeItemCollapsibleState.Expanded);
                 // item.command = {};
@@ -109,7 +109,7 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
                 if(chapter.fileElement.isError)
                 {
                     chapterItem.collapsibleState = vscode.TreeItemCollapsibleState.None;
-                    chapterItem.iconPath = this.getIcon(Icon.ALERT);
+                    chapterItem.iconPath = this.getIcon(Icon.alert);
                 }
                 // console.log('chapterItem: ', chapterItem);
                 return chapterItem;
@@ -123,16 +123,16 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
             //     let alertItem = new vscode.TreeItem(element.value, vscode.TreeItemCollapsibleState.None);
             //     alertItem.iconPath = this.getIcon(Icon.CALENDER);
             //     return alertItem;
-            case ElementType.DEADLINE:
-                if(!element.value || element.value == ""){ return null; }
+            case ElementType.deadline:
+                if(!element.value || element.value === ""){ return null; }
                 let deadItem = new vscode.TreeItem(element.value, vscode.TreeItemCollapsibleState.None);
                 deadItem.contextValue = 'deadline';
                 deadItem.label = element.label;
                 deadItem.description = element.description;
-                deadItem.iconPath = (element.isError)? this.getIcon(Icon.ALERT): this.getIcon(Icon.CALENDER);
+                deadItem.iconPath = (element.isError)? this.getIcon(Icon.alert): this.getIcon(Icon.calendar);
                 return deadItem;
-            case ElementType.MINIMUM:
-                if(!element.value || element.value == ""){ return null; }
+            case ElementType.minimum:
+                if(!element.value || element.value === ""){ return null; }
                 let miniItem = new vscode.TreeItem(element.value, vscode.TreeItemCollapsibleState.None);
                 // miniItem.label = `最低 ${element.value}字`
                 // miniItem.iconPath = this.getIcon(Icon.PENCIL)
@@ -140,10 +140,10 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
                 miniItem.contextValue = 'minimum';
                 miniItem.label = element.label;
                 miniItem.description = element.description;
-                miniItem.iconPath = (element.isError)? this.getIcon(Icon.QUILLPEN): this.getIcon(Icon.CHECK);
+                miniItem.iconPath = (element.isError)? this.getIcon(Icon.quillpen): this.getIcon(Icon.check);
                 return miniItem;
-            case ElementType.MAXIMUM:
-                if(!element.value || element.value == ""){ return null; }
+            case ElementType.maximum:
+                if(!element.value || element.value === ""){ return null; }
                 let maxItem = new vscode.TreeItem(element.value, vscode.TreeItemCollapsibleState.None);
                 // maxItem.label = `最大 ${element.value}字`;
                 // maxItem.iconPath = this.getIcon(Icon.PENCIL);
@@ -151,15 +151,15 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
                 maxItem.contextValue = 'maximum';
                 maxItem.label = element.label;
                 maxItem.description = element.description;
-                maxItem.iconPath = (element.isError)? this.getIcon(Icon.ALERT): this.getIcon(Icon.QUILLPEN);
+                maxItem.iconPath = (element.isError)? this.getIcon(Icon.alert): this.getIcon(Icon.quillpen);
                 return maxItem;
-            case ElementType.CONDITION:
+            case ElementType.condition:
                 let conItem = new vscode.TreeItem(element.value, vscode.TreeItemCollapsibleState.None);
                 // conItem.iconPath = this.getIcon(Icon.SEARCH);
                 conItem.contextValue = 'condition';
                 conItem.label = element.label;
                 conItem.description = element.description;
-                conItem.iconPath = (element.isError)? this.getIcon(Icon.SEARCH): this.getIcon(Icon.CHECK);
+                conItem.iconPath = (element.isError)? this.getIcon(Icon.search): this.getIcon(Icon.check);
                 return conItem;
         }
         return null;
@@ -178,7 +178,7 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
      */
     open(element:Element)
     {
-        if(element.type != ElementType.CHAPETER){ return; }
+        if(element.type !== ElementType.chapter){ return; }
         
         const chapter = element.value as Chapter;
         if(chapter)
@@ -211,7 +211,7 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
                 if(folder)
                 {
                     // フォルダ内のファイルであること
-                    if(uri[0].fsPath.substring(0, folder.length) == folder)
+                    if(uri[0].fsPath.substring(0, folder.length) === folder)
                     {
                         // フォルダからの相対パスに変換してツリーに追加
                         const file = uri[0].fsPath.substring(folder.length);
@@ -245,11 +245,11 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
         const chapter:Chapter = element.value as Chapter;
         // 確認
         vscode.window.showInputBox({placeHolder: 'y/n', prompt:`${chapter.fileElement?.value} 登録解除する場合、y`}).then(value=>{
-            if(value && value == 'y'){
+            if(value && value === 'y'){
                 // 合致しない要素のみの配列を生成
                 const index = this.plot.chapters.indexOf(chapter);
-                this.plot.chapters = this.plot.chapters.filter( (e,i)=> i != index);
-                this.plot.chapterElements = this.plot.chapterElements.filter( (e,i)=> i != index);
+                this.plot.chapters = this.plot.chapters.filter( (e,i)=> i !== index);
+                this.plot.chapterElements = this.plot.chapterElements.filter( (e,i)=> i !== index);
                 // 保存、表示更新
                 this.setPlot();
                 this._onDidChangeTreeData.fire(undefined);
@@ -270,21 +270,21 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
                 switch(value)
                 {
                     case '期日':
-                        chapter.deadlineElement = new Element(chapter, ElementType.DEADLINE, '1970/01/01');
+                        chapter.deadlineElement = new Element(chapter, ElementType.deadline, '1970/01/01');
                         chapter.properties.push(chapter.deadlineElement);
                         break;
                     case '最小':
-                        const min = new Element(chapter, ElementType.MINIMUM, '1枚');
+                        const min = new Element(chapter, ElementType.minimum, '1枚');
                         chapter.minimumElements.push(min);
                         chapter.properties.push(min);
                         break;
                     case '最大':
-                        const max = new Element(chapter, ElementType.MAXIMUM, '10枚');
+                        const max = new Element(chapter, ElementType.maximum, '10枚');
                         chapter.maximumElements.push(max);
                         chapter.properties.push(max);
                         break;
                     case '記述':
-                        const con = new Element(chapter, ElementType.CONDITION, '記述');
+                        const con = new Element(chapter, ElementType.condition, '記述');
                         chapter.conditionElements.push(con);
                         chapter.properties.push(con);
                         break;
@@ -303,14 +303,14 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
         let placeHolder = '';
         switch(element.type)
         {
-            case ElementType.DEADLINE:
+            case ElementType.deadline:
                 placeHolder = 'YYYY/MM/DD';
                 break;
-            case ElementType.MINIMUM:
-            case ElementType.MAXIMUM:
+            case ElementType.minimum:
+            case ElementType.maximum:
                 placeHolder = 'n枚（400字詰めの枚数）、nKB/nMB（ファイルサイズ）、n字/n（文字数）';
                 break;
-            case ElementType.CONDITION:
+            case ElementType.condition:
                 placeHolder = '記述必須のテキスト（正規表現）';
                 break;
         }
@@ -341,7 +341,7 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
     /** 上へ移動する */
     moveUp(element:Element)
     {
-        if(element.type==ElementType.CHAPETER
+        if(element.type===ElementType.chapter
             ?this.plot.moveUpChapter(element)
             :element.chapter.moveUp(element))
         {
@@ -354,7 +354,7 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
     /** 下へ移動する */
     moveDown(element:Element)
     {
-        if(element.type==ElementType.CHAPETER
+        if(element.type===ElementType.chapter
             ?this.plot.moveDownChapter(element)
             :element.chapter.moveDown(element))
         {
@@ -429,7 +429,7 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
             if(today.getTime() >= d.getTime())
             {
                 chapter.deadlineElement.isError = true;
-                chapter.deadlineElement.description = "The deadline has reached."
+                chapter.deadlineElement.description = "The deadline has reached.";
             }
         }
         else
@@ -515,7 +515,7 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
                 } else {
                     const remain = ( (size*1024) - stat.size ) / 1024;
                     element.isError = true;
-                    element.description = `現在 ${current.toFixed(0)}KB,  残り ${remain.toFixed(0)}KB`
+                    element.description = `現在 ${current.toFixed(0)}KB,  残り ${remain.toFixed(0)}KB`;
                 }
             }
         }
@@ -542,7 +542,7 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
                 } else {
                     const remain = ( (size*1024*1024) - stat.size ) / 1024 / 1024;
                     element.isError = true;
-                    element.description = `現在 ${current.toFixed(0)}MB, 残り ${remain.toFixed(0)}MB`
+                    element.description = `現在 ${current.toFixed(0)}MB, 残り ${remain.toFixed(0)}MB`;
                 }
             }
         }
@@ -614,7 +614,7 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
                 element.label = `最大 ${chars}字`;
                 if(textCount > chars){
                     element.isError = true;
-                    element.description = `現在 ${textCount}字`
+                    element.description = `現在 ${textCount}字`;
                 } else {
                     const remain = chars - textCount;
                     element.description = `現在 ${textCount}字,  残り ${remain}字`;
@@ -705,7 +705,7 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
                 this._onDidChangeTreeData.fire(undefined);
             }
         }else{
-            throw 'plotファイルを開けませんでした。';
+            throw Error('plotファイルを開けませんでした。');
         }
 
 		// // 現在開いているエディタのフォルダにアクセスする。
@@ -835,42 +835,42 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
     {
         switch(icon)
         {
-            case Icon.ALERT:
+            case Icon.alert:
                 return {
                     light: this.context.asAbsolutePath(path.join('resources', 'color', 'alert.svg')),
                     dark: this.context.asAbsolutePath(path.join('resources', 'color', 'alert.svg'))
-                }
-            case Icon.BUG:
+                };
+            case Icon.bug:
                 return {
                     light: this.context.asAbsolutePath(path.join('resources', 'light', 'bug.svg')),
                     dark: this.context.asAbsolutePath(path.join('resources', 'dark', 'bug.svg'))
-                }
-            case Icon.CALENDER:
+                };
+            case Icon.calendar:
                 return {
                     light: this.context.asAbsolutePath(path.join('resources', 'light', 'calendar.svg')),
                     dark: this.context.asAbsolutePath(path.join('resources', 'dark', 'calendar.svg'))
-                }
-            case Icon.CHECK:
+                };
+            case Icon.check:
                 return {
                     light: this.context.asAbsolutePath(path.join('resources', 'light', 'check.svg')),
                     dark: this.context.asAbsolutePath(path.join('resources', 'dark', 'check.svg'))
                 };
-            case Icon.FOUNTAINPEN:
+            case Icon.fountainpen:
                 return {
                     light: this.context.asAbsolutePath(path.join('resources', 'light', 'fountainPen.svg')),
                     dark: this.context.asAbsolutePath(path.join('resources', 'dark', 'fountainPen.svg'))
                 };
-            case Icon.PENCIL:
+            case Icon.pencil:
                 return {
                     light: this.context.asAbsolutePath(path.join('resources', 'light', 'pencil.svg')),
                     dark: this.context.asAbsolutePath(path.join('resources', 'dark', 'pencil.svg'))
                 };
-            case Icon.QUILLPEN:
+            case Icon.quillpen:
                 return {
                     light: this.context.asAbsolutePath(path.join('resources', 'light', 'quillPen.svg')),
                     dark: this.context.asAbsolutePath(path.join('resources', 'dark', 'quillPen.svg'))
                 };
-            case Icon.SEARCH:
+            case Icon.search:
                 return {
                     light: this.context.asAbsolutePath(path.join('resources', 'light', 'search.svg')),
                     dark: this.context.asAbsolutePath(path.join('resources', 'dark', 'search.svg'))
@@ -882,29 +882,29 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
 
 enum Icon{
     /** アラート */
-    ALERT,
+    alert,
     /** バグ */
-    BUG,
+    bug,
     /** カレンダー */
-    CALENDER,
+    calendar,
     /** チェック */
-    CHECK,
+    check,
     /** 万年筆 */
-    FOUNTAINPEN,
+    fountainpen,
     /** 鉛筆 */
-    PENCIL,
+    pencil,
     /** 羽ペン */
-    QUILLPEN,
+    quillpen,
     /** 検索 */
-    SEARCH,
+    search,
 }
 enum ElementType{
-    CHAPETER,
-    FILE,
-    DEADLINE,
-    MINIMUM,
-    MAXIMUM,
-    CONDITION,
+    chapter,
+    file,
+    deadline,
+    minimum,
+    maximum,
+    condition,
 }
 /** ツリービュー要素 */
 export class Element
@@ -972,7 +972,7 @@ class Plot
         }
         for(let c of this.chapters)
         {
-            this.chapterElements.push(new Element(c, ElementType.CHAPETER, c));
+            this.chapterElements.push(new Element(c, ElementType.chapter, c));
         }
 
         return;
@@ -1007,7 +1007,7 @@ class Plot
         path = path.replace(/^[/\\]+/, '');
         const c = new Chapter({'file':path});
         this.chapters.push(c);
-        this.chapterElements.push(new Element(c, ElementType.CHAPETER, c));
+        this.chapterElements.push(new Element(c, ElementType.chapter, c));
     }
 
     moveUpChapter(chapter:Element):boolean{ return this.moveChapter(chapter,true); }
@@ -1018,9 +1018,9 @@ class Plot
         if( (up && index > 0) || (!up && index < this.chapterElements.length-1) )
         {
             // 取り除いてから追加する。
-            this.chapterElements = this.chapterElements.filter(x=> x!=chapter);
+            this.chapterElements = this.chapterElements.filter(x=> x!==chapter);
             let c = this.chapters[index];
-            this.chapters = this.chapters.filter( (x,i)=> i!=index);
+            this.chapters = this.chapters.filter( (x,i)=> i!==index);
             this.chapterElements.splice(up?index-1:index+1, 0, chapter);
             this.chapters.splice(up?index-1: index+1, 0, c);
             return true;
@@ -1059,21 +1059,21 @@ class Chapter
         const maximums = 'maximum' in json ? json['maximum'] as []: [];
         const conditions = 'conditions' in json ? json['conditions'] as []: [];
 
-        this.fileElement = new Element(this, ElementType.FILE, file, file);
-        this.deadlineElement = new Element(this, ElementType.DEADLINE, deadline);
+        this.fileElement = new Element(this, ElementType.file, file, file);
+        this.deadlineElement = new Element(this, ElementType.deadline, deadline);
         // this.minimumElement = new Element(ElementType.MINIMUM, this.minimum);
         // this.maximumElement = new Element(ElementType.MAXIMUM, this.maximum);
         for(let minimum of minimums)
         {
-            this.minimumElements.push(new Element(this, ElementType.MINIMUM, minimum));
+            this.minimumElements.push(new Element(this, ElementType.minimum, minimum));
         }
         for(let maximum of maximums)
         {
-            this.maximumElements.push(new Element(this, ElementType.MAXIMUM, maximum));
+            this.maximumElements.push(new Element(this, ElementType.maximum, maximum));
         }
         for(let condition of conditions)
         {
-            this.conditionElements.push(new Element(this, ElementType.CONDITION, condition));
+            this.conditionElements.push(new Element(this, ElementType.condition, condition));
         }
         
         this.properties.push(this.fileElement);
@@ -1100,21 +1100,21 @@ class Chapter
     {
         switch(element.type)
         {
-            case ElementType.DEADLINE:
+            case ElementType.deadline:
                 this.deadlineElement = undefined;
-                this.properties = this.properties.filter(x=> x.type!=ElementType.DEADLINE);
+                this.properties = this.properties.filter(x=> x.type!==ElementType.deadline);
                 break;
-            case ElementType.MINIMUM:
-                this.minimumElements = this.minimumElements.filter(x=> x!=element);
-                this.properties = this.properties.filter(x=> x!=element);
+            case ElementType.minimum:
+                this.minimumElements = this.minimumElements.filter(x=> x!==element);
+                this.properties = this.properties.filter(x=> x!==element);
                 break;
-            case ElementType.MAXIMUM:
-                this.maximumElements = this.maximumElements.filter(x=> x!=element);
-                this.properties = this.properties.filter(x=> x!=element);
+            case ElementType.maximum:
+                this.maximumElements = this.maximumElements.filter(x=> x!==element);
+                this.properties = this.properties.filter(x=> x!==element);
                 break;
-            case ElementType.CONDITION:
-                this.conditionElements = this.conditionElements.filter(x=> x!=element);
-                this.properties = this.properties.filter(x=> x!=element);
+            case ElementType.condition:
+                this.conditionElements = this.conditionElements.filter(x=> x!==element);
+                this.properties = this.properties.filter(x=> x!==element);
                 break;
         }
     }
@@ -1129,40 +1129,40 @@ class Chapter
         let index2 = -1;
         switch(element.type)
         {
-            case ElementType.MINIMUM:
+            case ElementType.minimum:
                 index1 = this.minimumElements.indexOf(element);
                 if(this.movable(index1, this.minimumElements.length, up))
                 {
                     index2 = this.properties.indexOf(element);
                     // 取り除いてから追加する。
-                    this.minimumElements = this.minimumElements.filter(x=> x!=element);
-                    this.properties = this.properties.filter(x=> x!=element);
+                    this.minimumElements = this.minimumElements.filter(x=> x!==element);
+                    this.properties = this.properties.filter(x=> x!==element);
                     this.minimumElements.splice(up?index1-1:index1+1, 0, element);
                     this.properties.splice(up?index2-1:index2+1, 0, element);
                     return true;
                 }
                 break;
-            case ElementType.MAXIMUM:
+            case ElementType.maximum:
                 index1 = this.maximumElements.indexOf(element);
                 if(this.movable(index1, this.maximumElements.length, up))
                 {
                     index2 = this.properties.indexOf(element);
                     // 取り除いてから追加する。
-                    this.maximumElements = this.maximumElements.filter(x=> x!=element);
-                    this.properties = this.properties.filter(x=> x!=element);
+                    this.maximumElements = this.maximumElements.filter(x=> x!==element);
+                    this.properties = this.properties.filter(x=> x!==element);
                     this.maximumElements.splice(up?index1-1:index1+1, 0, element);
                     this.properties.splice(up?index2-1:index2+1, 0, element);
                     return true;
                 }
                 break;
-            case ElementType.CONDITION:
+            case ElementType.condition:
                 index1 = this.conditionElements.indexOf(element);
                 if(this.movable(index1, this.maximumElements.length, up))
                 {
                     index2 = this.properties.indexOf(element);
                     // 取り除いてから追加する。
-                    this.conditionElements = this.conditionElements.filter(x=> x!=element);
-                    this.properties = this.properties.filter(x=> x!=element);
+                    this.conditionElements = this.conditionElements.filter(x=> x!==element);
+                    this.properties = this.properties.filter(x=> x!==element);
                     this.conditionElements.splice(up?index1-1:index1+1, 0, element);
                     this.properties.splice(up?index2-1:index2+1, 0, element);
                     return true;
