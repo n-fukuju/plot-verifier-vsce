@@ -972,7 +972,7 @@ class Chapter
                 break;
             case ElementType.condition:
                 index1 = this.conditionElements.indexOf(element);
-                if(this.movable(index1, this.maximumElements.length, up))
+                if(this.movable(index1, this.conditionElements.length, up))
                 {
                     index2 = this.properties.indexOf(element);
                     // 取り除いてから追加する。

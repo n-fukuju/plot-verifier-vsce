@@ -69,31 +69,39 @@
 			},
 			{
 				"command": "plot-verifier-vsce.remove",
-				"title": "項目を削除する",
+				"title": "削除する",
 				"icon": "resources/color/cross.svg"
 			},
 			{
-				"command": "plot-verifier-vsce.moveUp",
-				"title": "上へ移動する",
+				"command": "plot-verifier-vsce.moveUpFile",
+				"title": "ファイルを上へ移動する",
 				"icon": {
 					"light": "resources/light/arrowUp.svg",
 					"dark": "resources/dark/arrowUp.svg"
 				}
 			},
 			{
-				"command": "plot-verifier-vsce.moveDown",
-				"title": "下へ移動する",
+				"command": "plot-verifier-vsce.moveDownFile",
+				"title": "ファイルを下へ移動する",
 				"icon": {
 					"light": "resources/light/arrowDown.svg",
 					"dark": "resources/dark/arrowDown.svg"
 				}
 			},
 			{
-				"command": "plot-verifier-vsce.select",
-				"title": "select（削除予定）",
+				"command": "plot-verifier-vsce.moveUpItem",
+				"title": "項目を上へ移動する",
 				"icon": {
-					"light": "resources/light/alert.svg",
-					"dark": "resources/dark/alert.svg"
+					"light": "resources/light/arrowUp2.svg",
+					"dark": "resources/dark/arrowUp2.svg"
+				}
+			},
+			{
+				"command": "plot-verifier-vsce.moveDownItem",
+				"title": "項目を下へ移動する",
+				"icon": {
+					"light": "resources/light/arrowDown2.svg",
+					"dark": "resources/dark/arrowDown2.svg"
 				}
 			}
 		],
@@ -126,42 +134,42 @@
 					"group": "inline"
 				},
 				{
-					"command": "plot-verifier-vsce.moveUp",
+					"command": "plot-verifier-vsce.moveUpFile",
 					"when": "view==plotVerifier && viewItem==chapter",
 					"group": "inline"
 				},
 				{
-					"command": "plot-verifier-vsce.moveDown",
+					"command": "plot-verifier-vsce.moveDownFile",
 					"when": "view==plotVerifier && viewItem==chapter",
 					"group": "inline"
 				},
 				{
-					"command": "plot-verifier-vsce.moveUp",
+					"command": "plot-verifier-vsce.moveUpItem",
 					"when": "view==plotVerifier && viewItem==minimum",
 					"group": "inline"
 				},
 				{
-					"command": "plot-verifier-vsce.moveDown",
+					"command": "plot-verifier-vsce.moveDownItem",
 					"when": "view==plotVerifier && viewItem==minimum",
 					"group": "inline"
 				},
 				{
-					"command": "plot-verifier-vsce.moveUp",
+					"command": "plot-verifier-vsce.moveUpItem",
 					"when": "view==plotVerifier && viewItem==maximum",
 					"group": "inline"
 				},
 				{
-					"command": "plot-verifier-vsce.moveDown",
+					"command": "plot-verifier-vsce.moveDownItem",
 					"when": "view==plotVerifier && viewItem==maximum",
 					"group": "inline"
 				},
 				{
-					"command": "plot-verifier-vsce.moveUp",
+					"command": "plot-verifier-vsce.moveUpItem",
 					"when": "view==plotVerifier && viewItem==condition",
 					"group": "inline"
 				},
 				{
-					"command": "plot-verifier-vsce.moveDown",
+					"command": "plot-verifier-vsce.moveDownItem",
 					"when": "view==plotVerifier && viewItem==condition",
 					"group": "inline"
 				},

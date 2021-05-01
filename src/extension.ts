@@ -26,8 +26,10 @@ export function activate(context: vscode.ExtensionContext) {
 	vscode.commands.registerCommand('plot-verifier-vsce.add', (element:Element)=> provider.add(element));
 	vscode.commands.registerCommand('plot-verifier-vsce.input', (element:Element)=> provider.input(element));
 	vscode.commands.registerCommand('plot-verifier-vsce.remove', (element:Element)=> provider.remove(element));
-	vscode.commands.registerCommand('plot-verifier-vsce.moveUp', (element:Element)=> provider.moveUp(element));
-	vscode.commands.registerCommand('plot-verifier-vsce.moveDown', (element:Element)=> provider.moveDown(element));
+	vscode.commands.registerCommand('plot-verifier-vsce.moveUpFile', (element:Element)=> provider.moveUp(element));
+	vscode.commands.registerCommand('plot-verifier-vsce.moveDownFile', (element:Element)=> provider.moveDown(element));
+	vscode.commands.registerCommand('plot-verifier-vsce.moveUpItem', (element:Element)=> provider.moveUp(element));
+	vscode.commands.registerCommand('plot-verifier-vsce.moveDownItem', (element:Element)=> provider.moveDown(element));
 }
 
 export function deactivate() {}
