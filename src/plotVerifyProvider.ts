@@ -221,8 +221,12 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
                 switch(value)
                 {
                     case '期日':
-                        chapter.deadlineElement = new Element(chapter, ElementType.deadline, '1970/01/01');
-                        chapter.properties.push(chapter.deadlineElement);
+                        if(!chapter.deadlineElement){
+                            chapter.deadlineElement = new Element(chapter, ElementType.deadline, '1970/01/01');
+                            chapter.properties.push(chapter.deadlineElement);
+                        }else{
+                            vscode.window.showWarningMessage('期日は一つまでです(0x0)');
+                        }
                         break;
                     case '最小':
                         const min = new Element(chapter, ElementType.minimum, '1枚');
