@@ -11,38 +11,40 @@ Plotexr
 * エクスプローラから、「ファイルを登録」します。  
 
 ![file1](https://github.com/n-fukuju/plot-verifier-vsce/raw/master/images/feature-file1.png)  
+![file2](https://github.com/n-fukuju/plot-verifier-vsce/raw/master/images/feature-file2.png)  
 
 * 追加されたファイルのメニューから、「項目を追加」します。  
   * 追加する項目は、今回の例では「最小」です。  
 
-![file2](https://github.com/n-fukuju/plot-verifier-vsce/raw/master/images/feature-file2.png)  
-  
 ![file3](https://github.com/n-fukuju/plot-verifier-vsce/raw/master/images/feature-file3.png)  
+![file4](https://github.com/n-fukuju/plot-verifier-vsce/raw/master/images/feature-file4.png)  
 
 * ファイルに対する検証項目として、最低ラインが登録されます。  
   * 薄字で、現在のファイル内容が表示されます。  
 
-![file4](https://github.com/n-fukuju/plot-verifier-vsce/raw/master/images/feature-file4.png)  
+![file5](https://github.com/n-fukuju/plot-verifier-vsce/raw/master/images/feature-file5.png)  
+
 
 * 検証値を変えるため、メニューから「更新」します。  
   * 今回は、25枚（400字詰め換算）とします。  
-
-![file5](https://github.com/n-fukuju/plot-verifier-vsce/raw/master/images/feature-file5.png)  
   
 ![file6](https://github.com/n-fukuju/plot-verifier-vsce/raw/master/images/feature-file6.png)  
-* ファイル内容が不足するため、チェックマークが消えます。  
-
 ![file7](https://github.com/n-fukuju/plot-verifier-vsce/raw/master/images/feature-file7.png)  
 
-* ファイル内容を更新して再度検証する場合、ツリービューの「更新」を実行します。  
+* ファイル内容が不足するため、チェックマークが消えます。  
 
 ![file8](https://github.com/n-fukuju/plot-verifier-vsce/raw/master/images/feature-file8.png)  
+
+* あとは、要求ラインに到達するまでひたすら書き足します。  
+* 作業後に再度検証する場合、ツリービューの「更新」を実行します。  
+
+![file9](https://github.com/n-fukuju/plot-verifier-vsce/raw/master/images/feature-file9.png)  
 
 
 
 ## 記述項目
 記述項目は正規表現を使用できます。  
-（以下の例の場合、煙草を捨てる記述はあるが拾う記述はない）  
+（以下の例の場合、ファイル内に煙草を捨てる記述はあるが拾う記述はない）  
 ![regex](https://github.com/n-fukuju/plot-verifier-vsce/raw/master/images/feature-regex.png)  
 正規表現パターンは、MDN等を参照してください。  
 [正規表現 - MDN](https://developer.mozilla.org/ja/docs/Web/JavaScript/Guide/Regular_Expressions)  
@@ -63,7 +65,8 @@ Plotexr
 * 枚数換算は改行を考慮するため、文字数と枚数は一致しません。
 * 枚数換算は句読点のぶら下げ（行末に収める）は考慮しません。
 * UTF-8でのみ動作確認しています。
-* 項目の上下移動は同じ項目内です。（例えば記述項目なら記述項目の中でのみ並び替え）
+* 現状、ワークスペースでの動作は未サポートです。
+* 項目の上下移動は同じ項目内のみです。（例えば記述項目なら記述項目の中でのみ並び替え）
 
 ## アイコン
 [ICOOON MONO](https://icooon-mono.com/)  
