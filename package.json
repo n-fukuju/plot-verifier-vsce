@@ -1,7 +1,7 @@
 {
 	"name": "plot-verifier",
 	"displayName": "Plotexr",
-	"description": "想定通りに物書きができているか検証するツリービュー。",
+	"description": "物書き用ツリービュー（主に小説用）",
 	"version": "0.0.1",
 	"publisher": "n-fukuju",
 	"icon": "images/icon.png",
@@ -103,6 +103,10 @@
 					"light": "resources/light/arrowDown2.svg",
 					"dark": "resources/dark/arrowDown2.svg"
 				}
+			},
+			{
+				"command": "plot-verifier-vsce.analyze",
+				"title": "進捗分析"
 			}
 		],
 		"views": {

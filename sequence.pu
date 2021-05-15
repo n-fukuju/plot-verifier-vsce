@@ -1,0 +1,56 @@
+@startuml plot
+
+participant ui as "UI"
+participant prov as "provider"
+participant plot as "Plot"
+participant elem as "Element"
+participant uril as "Util"
+
+prov->prov: constructor()
+    activate prov
+    prov->prov: refresh();
+    activate prov
+        prov->prov: getPlot()
+        activate prov
+            prov->prov: getPlotFile()
+            activate prov
+                prov->prov: getFolder()\n ワークフォルダを取得
+            deactivate prov
+            prov->prov: plot.json読み込み
+            prov->plot: Plot インスタンス生成
+        deactivate prov
+        prov->prov: comparePlot()\n 定義と比較
+        prov->prov: 再描画
+        note right prov: TODO\n getPlot()等を、\n ハンドラから呼びたい。\n >Utilクラス作成
+    deactivate prov
+deactivate prov
+
+ui->prov: refresh\n 再読み込み
+ref over prov: refresh()
+prov-->ui
+
+ui->prov: regist\n ファイル登録
+activate prov
+prov->prov: ファイル選択ダイアログ\n相対パスへ変換
+prov->prov: setPlot()
+activate prov
+    prov->prov: getPlotFile()
+    prov->plot: forSerizlize()
+    prov->prov: 書き込み
+deactivate prov
+prov->prov: comparePlot()
+prov-->ui
+deactivate prov
+
+ui->prov: unregist\n 登録解除
+ui->prov: open\n ファイルを開く
+ui->prov: add\n 項目を追加する
+ui->prov: input\n 項目を更新する
+ui->prov: remove\n 項目を削除する
+ui->prov: moveUpFile\n ファイルを上へ
+ui->prov: moveDownFile\n ファイルを下へ
+ui->prov: moveUpItem\n 項目を上へ
+ui->prov: moveDownItem\n 項目を下へ
+ui->prov: analyze\n 分析
+
+@enduml

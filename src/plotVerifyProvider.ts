@@ -3,6 +3,12 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as readline from 'readline';
 
+import { Plot } from './modules/plot';
+import { Workload } from './modules/workload';
+import { Element, ElementType } from './modules/element';
+import { Chapter } from './modules/chapter';
+import { Icon } from './modules/icon';
+
 /** プロット検証ツリープロバイダ */
 export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
 
@@ -198,10 +204,14 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
         // 確認
         vscode.window.showInputBox({placeHolder: 'y/n', prompt:`${chapter.fileElement?.value} 登録解除する場合、y`}).then(value=>{
             if(value && value === 'y'){
+                // 削除前にファイル監視を停止
+                // TODO Plotクラスに移植
+                this.plot.unWatchFiles();
                 // 合致しない要素のみの配列を生成
                 const index = this.plot.chapters.indexOf(chapter);
                 this.plot.chapters = this.plot.chapters.filter( (e,i)=> i !== index);
                 this.plot.chapterElements = this.plot.chapterElements.filter( (e,i)=> i !== index);
+                this.plot.watchFiles();
                 // 保存、表示更新
                 this.setPlot();
                 this._onDidChangeTreeData.fire(undefined);
@@ -627,6 +637,14 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
         }
     }
 
+    private async setWorkload()
+    {
+        await vscode.workspace.fs.writeFile(
+            vscode.Uri.joinPath(this.getWorkspaceFolder().uri, 'workload.json'),
+            Buffer.from(JSON.stringify(this.plot.workloads))
+            );
+    }
+
     /** 
      * 作業中のフォルダーを取得する。
      * 取得できなかった場合、undefined
@@ -716,284 +734,5 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
     }
 }
 
-enum Icon{
-    /** アラート */
-    alert,
-    /** バグ */
-    bug,
-    /** カレンダー */
-    calendar,
-    /** チェック */
-    check,
-    /** 万年筆 */
-    fountainpen,
-    /** 鉛筆 */
-    pencil,
-    /** 羽ペン */
-    quillpen,
-    /** 検索 */
-    search,
-}
-enum ElementType{
-    chapter,
-    file,
-    deadline,
-    minimum,
-    maximum,
-    condition,
-}
-/** ツリービュー要素 */
-export class Element
-{
-    /** 要素タイプ */
-    type: ElementType;
-    /** 設定値 */
-    value: any;
-    /** 表示テキスト */
-    label: string;
-    /** 追加テキスト */
-    description: string;
-    /** エラー */
-    isError: boolean;
-    /** 項目から親要素への参照 */
-    chapter: Chapter;
-    /** コンストラクタ */
-    constructor(chapter:Chapter, type:ElementType, value:any, label:string="", description:string="", isError=false)
-    {
-        this.chapter = chapter;
-        this.type = type;
-        this.value = value;
-        this.label = label;
-        this.description = description;
-        this.isError = isError;
-    }
-}
 
 
-/** プロットを表すクラス */
-class Plot
-{
-    /** タイトル
-     * 
-     * 未指定の場合、空白文字
-     */
-    // title:string;
-    /** 概要
-     * 
-     * 未指定の場合、空白文字
-     */
-    // description:string;
-    /** 章立ての一覧 */
-    chapters:Chapter[] = [];
-    /** 章立て要素の一覧 */
-    chapterElements:Element[] = [];
-
-    /** ルートフォルダ */
-    root:vscode.WorkspaceFolder;
-
-    /** コンストラクタ */
-    constructor(root:vscode.WorkspaceFolder, json:object)
-    {
-        this.root = root;
-        const cs = 'chapters' in json ? json['chapters'] as []: [];
-        for(let c of cs)
-        {
-            this.chapters.push(new Chapter(c));
-        }
-        for(let c of this.chapters)
-        {
-            this.chapterElements.push(new Element(c, ElementType.chapter, c));
-        }
-
-        return;
-    }
-
-    /** シリアライズ用のJSON文字列を返す */
-    forSerialize()
-    {
-        let chapters = [];
-        for(const c of this.chapters)
-        {
-            let chapter = {};
-            if(c.fileElement){ chapter['file'] = c.fileElement.value; }
-            if(c.deadlineElement){ chapter['deadline'] = c.deadlineElement.value; }
-            if(c.minimumElements.length > 0){ chapter['minimum'] = c.minimumElements.map(x=> x.value); }
-            if(c.maximumElements.length > 0){ chapter['maximum'] = c.maximumElements.map(x=> x.value); }
-            if(c.conditionElements.length > 0){ chapter['conditions'] = c.conditionElements.map(x=> x.value); }
-            chapters.push(chapter);
-        }
-
-        return JSON.stringify({
-            // "title": this.title,
-            // "description": this.description,
-            'chapters': chapters
-        }, null, 4);
-    }
-
-    /** chapter を追加する */
-    addChapter(path:string)
-    {
-        // 先頭にスラッシュがついている場合、除去する
-        path = path.replace(/^[/\\]+/, '');
-        const c = new Chapter({'file':path});
-        this.chapters.push(c);
-        this.chapterElements.push(new Element(c, ElementType.chapter, c));
-    }
-
-    moveUpChapter(chapter:Element):boolean{ return this.moveChapter(chapter,true); }
-    moveDownChapter(chapter:Element):boolean{ return this.moveChapter(chapter,false); }
-    private moveChapter(chapter:Element, up:boolean):boolean
-    {
-        let index = this.chapterElements.indexOf(chapter);
-        if( (up && index > 0) || (!up && index < this.chapterElements.length-1) )
-        {
-            // 取り除いてから追加する。
-            this.chapterElements = this.chapterElements.filter(x=> x!==chapter);
-            let c = this.chapters[index];
-            this.chapters = this.chapters.filter( (x,i)=> i!==index);
-            this.chapterElements.splice(up?index-1:index+1, 0, chapter);
-            this.chapters.splice(up?index-1: index+1, 0, c);
-            return true;
-        }
-        return false;
-    }
-}
-
-/** 章立てクラス */
-class Chapter
-{
-    // file:string;
-    fileElement:Element;
-    // alert:string;
-    // deadline:string;
-    deadlineElement:Element;
-    // minimums:string[];
-    minimumElements:Element[]=[];
-    // maximums:string[];
-    maximumElements:Element[]=[];
-    // conditions:string[];
-    conditionElements:Element[]=[];
-    properties:Element[]=[];
-    constructor(json:object)
-    {
-        const file = 'file' in json ? json['file']: null;
-        const deadline = 'deadline' in json ? json['deadline']: undefined;
-        const minimums = 'minimum' in json ? json['minimum'] as []: [];
-        const maximums = 'maximum' in json ? json['maximum'] as []: [];
-        const conditions = 'conditions' in json ? json['conditions'] as []: [];
-
-        this.fileElement = new Element(this, ElementType.file, file, file);
-        this.deadlineElement = new Element(this, ElementType.deadline, deadline);
-        for(let minimum of minimums)
-        {
-            this.minimumElements.push(new Element(this, ElementType.minimum, minimum));
-        }
-        for(let maximum of maximums)
-        {
-            this.maximumElements.push(new Element(this, ElementType.maximum, maximum));
-        }
-        for(let condition of conditions)
-        {
-            this.conditionElements.push(new Element(this, ElementType.condition, condition));
-        }
-        
-        this.properties.push(this.fileElement);
-        this.properties.push(this.deadlineElement);
-        for(let minimumElement of this.minimumElements)
-        {
-            this.properties.push(minimumElement);
-        }
-        for(let maximumElement of this.maximumElements)
-        {
-            this.properties.push(maximumElement);
-        }
-        for(let conditionElement of this.conditionElements)
-        {
-            this.properties.push(conditionElement);
-        }
-        return;
-    }
-
-    /** 項目を削除する */
-    removeElement(element:Element)
-    {
-        switch(element.type)
-        {
-            case ElementType.deadline:
-                this.deadlineElement = undefined;
-                this.properties = this.properties.filter(x=> x.type!==ElementType.deadline);
-                break;
-            case ElementType.minimum:
-                this.minimumElements = this.minimumElements.filter(x=> x!==element);
-                this.properties = this.properties.filter(x=> x!==element);
-                break;
-            case ElementType.maximum:
-                this.maximumElements = this.maximumElements.filter(x=> x!==element);
-                this.properties = this.properties.filter(x=> x!==element);
-                break;
-            case ElementType.condition:
-                this.conditionElements = this.conditionElements.filter(x=> x!==element);
-                this.properties = this.properties.filter(x=> x!==element);
-                break;
-        }
-    }
-
-    moveUp(element:Element):boolean { return this.move(element,true); }
-    moveDown(element:Element):boolean { return this.move(element,false); }
-
-    /** リスト内で項目を移動させる */
-    private move(element:Element, up:boolean):boolean
-    {
-        let index1 = -1;
-        let index2 = -1;
-        switch(element.type)
-        {
-            case ElementType.minimum:
-                index1 = this.minimumElements.indexOf(element);
-                if(this.movable(index1, this.minimumElements.length, up))
-                {
-                    index2 = this.properties.indexOf(element);
-                    // 取り除いてから追加する。
-                    this.minimumElements = this.minimumElements.filter(x=> x!==element);
-                    this.properties = this.properties.filter(x=> x!==element);
-                    this.minimumElements.splice(up?index1-1:index1+1, 0, element);
-                    this.properties.splice(up?index2-1:index2+1, 0, element);
-                    return true;
-                }
-                break;
-            case ElementType.maximum:
-                index1 = this.maximumElements.indexOf(element);
-                if(this.movable(index1, this.maximumElements.length, up))
-                {
-                    index2 = this.properties.indexOf(element);
-                    // 取り除いてから追加する。
-                    this.maximumElements = this.maximumElements.filter(x=> x!==element);
-                    this.properties = this.properties.filter(x=> x!==element);
-                    this.maximumElements.splice(up?index1-1:index1+1, 0, element);
-                    this.properties.splice(up?index2-1:index2+1, 0, element);
-                    return true;
-                }
-                break;
-            case ElementType.condition:
-                index1 = this.conditionElements.indexOf(element);
-                if(this.movable(index1, this.conditionElements.length, up))
-                {
-                    index2 = this.properties.indexOf(element);
-                    // 取り除いてから追加する。
-                    this.conditionElements = this.conditionElements.filter(x=> x!==element);
-                    this.properties = this.properties.filter(x=> x!==element);
-                    this.conditionElements.splice(up?index1-1:index1+1, 0, element);
-                    this.properties.splice(up?index2-1:index2+1, 0, element);
-                    return true;
-                }
-                break;
-        }
-        return false;
-    }
-
-    /** リスト内で移動可能か判定 */
-    private movable(index:number, length:number, up:boolean)
-    {
-        return (up && index > 0) || (!up && index < length-1);
-    }
-}
