@@ -1,8 +1,49 @@
+import * as fs from 'fs';
 import * as vscode from 'vscode';
 
+import { Plot } from './plot';
 
-export function getPlot(){
-    // TODO Plotクラスをファイル化
+
+/** 読み込み */
+export async function getPlot(refresh=false): Promise<void>
+{
+    this.plot = null;
+    
+    const plotFile = this.getPlotFile();
+    if(plotFile){
+        let plot = '{"chapters":[]}';
+        if(fs.existsSync(plotFile.fsPath))
+        {
+            const plotData = await vscode.workspace.fs.readFile(plotFile);
+            plot = Buffer.from(plotData).toString('utf8');
+        }
+        const p = new Plot(getWorkspaceFolder(), JSON.parse(plot));
+        this.plot = p;
+        console.log("json.parse(): ", p);
+        // ファイル読み込み中に、初回表示が過ぎてしまうため、明示的に呼び出し。
+        if(refresh){
+            // TODO 呼び出し元で処理
+            this._onDidChangeTreeData.fire(undefined);
+        }
+    }else{
+        throw Error('plotファイルを開けませんでした。');
+    }
+}
+
+export async function setPlot()
+{
+    // const folder = this.getFolder();
+    const plotFile = getPlotFile();
+    if(plotFile)
+    {
+        // 書き込み
+        await vscode.workspace.fs.writeFile(plotFile, Buffer.from(this.plot.forSerialize()));
+    }
+    else
+    {
+        // TODO 例外throw
+        vscode.window.showWarningMessage('開いているフォルダがないため、処理できません。');
+    }
 }
 
 /**
