@@ -4,50 +4,47 @@ import * as vscode from 'vscode';
 import { Plot } from './plot';
 
 
-/** 読み込み */
-export async function getPlot(refresh=false): Promise<void>
+/** 読み込み用ファクトリ */
+export async function getPlot(refresh=false): Promise<Plot>
 {
-    this.plot = null;
-    
-    const plotFile = this.getPlotFile();
+    const plotFile = getPlotFile();
     if(plotFile){
         let plot = '{"chapters":[]}';
         if(fs.existsSync(plotFile.fsPath))
         {
             const plotData = await vscode.workspace.fs.readFile(plotFile);
             plot = Buffer.from(plotData).toString('utf8');
-        }
-        const p = new Plot(getWorkspaceFolder(), JSON.parse(plot));
-        this.plot = p;
-        console.log("json.parse(): ", p);
-        // ファイル読み込み中に、初回表示が過ぎてしまうため、明示的に呼び出し。
-        if(refresh){
-            // TODO 呼び出し元で処理
-            this._onDidChangeTreeData.fire(undefined);
+        } else { console.log('plot ファイルが存在しません。: ', plotFile.fsPath); }
+
+        try{
+            const p = new Plot(getWorkspaceFolder(), plotFile, JSON.parse(plot));
+            return Promise.resolve(p);
+        } catch(e){
+            console.log('plot ファイルを開けませんでした。: ', e);
+            return Promise.reject('plot ファイルを開けませんでした。');
         }
     }else{
-        throw Error('plotファイルを開けませんでした。');
+        return Promise.reject('plot ファイルを開けませんでした。');
     }
 }
 
-export async function setPlot()
-{
-    // const folder = this.getFolder();
-    const plotFile = getPlotFile();
-    if(plotFile)
-    {
-        // 書き込み
-        await vscode.workspace.fs.writeFile(plotFile, Buffer.from(this.plot.forSerialize()));
-    }
-    else
-    {
-        // TODO 例外throw
-        vscode.window.showWarningMessage('開いているフォルダがないため、処理できません。');
-    }
-}
+/** 書き込み */
+// export async function setPlot(plot:Plot): Promise<void>
+// {
+//     const plotFile = getPlotFile();
+//     if(plotFile)
+//     {
+//         // 書き込み
+//         await vscode.workspace.fs.writeFile(plotFile, Buffer.from(plot.forSerialize()));
+//     }
+//     else
+//     {
+//         return Promise.reject('処理できませんでした。');
+//     }
+// }
 
 /**
- * 設定ファイルを取得する
+ * 設定ファイルのパスを取得する。
  * 取得できなかった場合、undefined
  */
 export function getPlotFile(fileName:string='plot.json'):vscode.Uri|undefined
@@ -55,7 +52,7 @@ export function getPlotFile(fileName:string='plot.json'):vscode.Uri|undefined
     const folder = getFolder();
     if(folder)
     {
-        return vscode.Uri.joinPath(vscode.Uri.file(folder), 'fileName');
+        return vscode.Uri.joinPath(vscode.Uri.file(folder), fileName);
     }
 }
 

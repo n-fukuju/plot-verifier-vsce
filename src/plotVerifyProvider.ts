@@ -8,7 +8,8 @@ import { Workload } from './modules/workload';
 import { Element, ElementType } from './modules/element';
 import { Chapter } from './modules/chapter';
 import { Icon, getIcon } from './modules/icon';
-import { getPlot, setPlot, getFolder } from './modules/util';
+import { getPlot, getFolder } from './modules/util';
+import { Watcher } from './modules/watcher';
 
 /** プロット検証ツリープロバイダ */
 export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
@@ -16,11 +17,12 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
     private _onDidChangeTreeData: vscode.EventEmitter<Element | null> = new vscode.EventEmitter<Element | null>();
     readonly onDidChangeTreeData: vscode.Event<Element | null> = this._onDidChangeTreeData.event;
 
-    // private text: string = '';
-    // private tree: json.Node;
+    /** プロット（?）クラス */
     private plot: Plot;
-    // private editor: vscode.TextEditor;
     private autoRefresh = true;
+
+    /** ファイル監視 */
+    watcher:Watcher = new Watcher();
 
     constructor(private context: vscode.ExtensionContext){
         // vscode.window.onDidChangeActiveTextEditor(() => this.onActiveEditorChanged());
@@ -127,7 +129,7 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
     /** 検証を再実行する */
     async refresh()
     {
-        await getPlot();
+        this.plot = await getPlot();
         this.comparePlot();
         this._onDidChangeTreeData.fire(undefined);
     }
@@ -175,9 +177,12 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
                         // フォルダからの相対パスに変換してツリーに追加
                         const file = uri[0].fsPath.substring(folder.length);
                         this.plot.addChapter(file);
+                        // ファイル監視対象を更新
+                        this.watcher.replace(this.plot.getChapterFiles());
 
                         // 保存
-                        setPlot();
+                        // setPlot(this.plot);
+                        this.plot.save();
                         
                         // 表示を更新
                         this.comparePlot();
@@ -207,14 +212,15 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
             if(value && value === 'y'){
                 // 削除前にファイル監視を停止
                 // TODO Plotクラスに移植
-                this.plot.unWatchFiles();
+                // this.plot.unWatchFiles();
                 // 合致しない要素のみの配列を生成
                 const index = this.plot.chapters.indexOf(chapter);
                 this.plot.chapters = this.plot.chapters.filter( (e,i)=> i !== index);
                 this.plot.chapterElements = this.plot.chapterElements.filter( (e,i)=> i !== index);
-                this.plot.watchFiles();
+                // this.plot.watchFiles();
                 // 保存、表示更新
-                setPlot();
+                // setPlot(this.plot);
+                this.plot.save();
                 this._onDidChangeTreeData.fire(undefined);
             }
         });
@@ -256,7 +262,8 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
                         break;
                 }
                 // 保存、表示更新
-                setPlot();
+                // setPlot(this.plot);
+                this.plot.save();
                 this.comparePlot();
                 this._onDidChangeTreeData.fire(undefined);
             }
@@ -285,7 +292,8 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
             {
                 element.value = value;
                 // 保存、表示更新
-                setPlot();
+                // setPlot(this.plot);
+                this.plot.save();
                 this.comparePlot();
                 this._onDidChangeTreeData.fire(undefined);
             }
@@ -299,7 +307,8 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
     {
         element.chapter.removeElement(element);
         // 保存、表示更新
-        setPlot();
+        // setPlot(this.plot);
+        this.plot.save();
         this.comparePlot();
         this._onDidChangeTreeData.fire(undefined);
     }
@@ -312,7 +321,8 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
             :element.chapter.moveUp(element))
         {
             // 保存、表示更新
-            setPlot();
+            // setPlot(this.plot);
+            this.plot.save();
             this._onDidChangeTreeData.fire(undefined);
         }else{ vscode.window.showWarningMessage('移動できません(0x0)'); }
     }
@@ -325,7 +335,8 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
             :element.chapter.moveDown(element))
         {
             // 保存、表示更新
-            setPlot();
+            // setPlot(this.plot);
+            this.plot.save();
             this._onDidChangeTreeData.fire(undefined);
         }else{ vscode.window.showWarningMessage('移動できません(0x0)'); }
     }
@@ -595,143 +606,6 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
 
     // private onDocumentChanged(changeEvent: vscode.TextDocumentChangeEvent): void
     // {
-    // }
-
-    // /** 読み込み */
-    // private async getPlot(refresh=false): Promise<void>
-    // {
-    //     this.plot = null;
-        
-    //     const plotFile = this.getPlotFile();
-    //     if(plotFile){
-    //         let plot = '{"chapters":[]}';
-    //         if(fs.existsSync(plotFile.fsPath))
-    //         {
-    //             const plotData = await vscode.workspace.fs.readFile(plotFile);
-    //             plot = Buffer.from(plotData).toString('utf8');
-    //         }
-    //         const p = new Plot(this.getWorkspaceFolder(), JSON.parse(plot));
-    //         this.plot = p;
-    //         console.log("json.parse(): ", p);
-    //         // ファイル読み込み中に、初回表示が過ぎてしまうため、明示的に呼び出し。
-    //         if(refresh){
-    //             this._onDidChangeTreeData.fire(undefined);
-    //         }
-    //     }else{
-    //         throw Error('plotファイルを開けませんでした。');
-    //     }
-    // }
-
-    // /** 書き込み */
-    // private async setPlot()
-    // {
-    //     // const folder = this.getFolder();
-    //     const plotFile = this.getPlotFile();
-    //     if(plotFile)
-    //     {
-    //         // 書き込み
-    //         await vscode.workspace.fs.writeFile(plotFile, Buffer.from(this.plot.forSerialize()));
-    //     }
-    //     else
-    //     {
-    //         vscode.window.showWarningMessage('開いているフォルダがないため、処理できません。');
-    //     }
-    // }
-
-    // private async setWorkload()
-    // {
-    //     await vscode.workspace.fs.writeFile(
-    //         vscode.Uri.joinPath(this.getWorkspaceFolder().uri, 'workload.json'),
-    //         Buffer.from(JSON.stringify(this.plot.workloads))
-    //         );
-    // }
-
-    /** 
-     * 作業中のフォルダーを取得する。
-     * 取得できなかった場合、undefined
-     */
-    // getFolder():string|undefined
-    // {
-    //     return this.getWorkspaceFolder().uri.fsPath;
-    // }
-
-    // getWorkspaceFolder():vscode.WorkspaceFolder
-    // {
-    //     // 現在開いているエディタのフォルダ
-    //     const editor = vscode.window.activeTextEditor;
-    //     const resource = editor?.document.uri;
-    //     if(resource?.scheme === 'file')
-    //     {
-    //         const folder = vscode.workspace.getWorkspaceFolder(resource);
-    //         if(folder)
-    //         {
-    //             return folder;
-    //         }
-    //     }
-
-    //     // 現在開いているフォルダの先頭
-    //     if(vscode.workspace.workspaceFolders?.length > 0)
-    //     {
-    //         return vscode.workspace.workspaceFolders[0];
-    //     }
-    // }
-
-    // getPlotFile():vscode.Uri|undefined
-    // {
-    //     const folder = this.getFolder();
-    //     if(folder)
-    //     {
-    //         const folderUri = vscode.Uri.file(folder);
-    //         return vscode.Uri.joinPath(folderUri, 'plot.json');
-    //     }
-    // }
-
-    // getIcon(icon:Icon)
-    // {
-    //     switch(icon)
-    //     {
-    //         case Icon.alert:
-    //             return {
-    //                 light: this.context.asAbsolutePath(path.join('resources', 'color', 'alert.svg')),
-    //                 dark: this.context.asAbsolutePath(path.join('resources', 'color', 'alert.svg'))
-    //             };
-    //         case Icon.bug:
-    //             return {
-    //                 light: this.context.asAbsolutePath(path.join('resources', 'light', 'bug.svg')),
-    //                 dark: this.context.asAbsolutePath(path.join('resources', 'dark', 'bug.svg'))
-    //             };
-    //         case Icon.calendar:
-    //             return {
-    //                 light: this.context.asAbsolutePath(path.join('resources', 'light', 'calendar.svg')),
-    //                 dark: this.context.asAbsolutePath(path.join('resources', 'dark', 'calendar.svg'))
-    //             };
-    //         case Icon.check:
-    //             return {
-    //                 light: this.context.asAbsolutePath(path.join('resources', 'light', 'check.svg')),
-    //                 dark: this.context.asAbsolutePath(path.join('resources', 'dark', 'check.svg'))
-    //             };
-    //         case Icon.fountainpen:
-    //             return {
-    //                 light: this.context.asAbsolutePath(path.join('resources', 'light', 'fountainPen.svg')),
-    //                 dark: this.context.asAbsolutePath(path.join('resources', 'dark', 'fountainPen.svg'))
-    //             };
-    //         case Icon.pencil:
-    //             return {
-    //                 light: this.context.asAbsolutePath(path.join('resources', 'light', 'pencil.svg')),
-    //                 dark: this.context.asAbsolutePath(path.join('resources', 'dark', 'pencil.svg'))
-    //             };
-    //         case Icon.quillpen:
-    //             return {
-    //                 light: this.context.asAbsolutePath(path.join('resources', 'light', 'quillPen.svg')),
-    //                 dark: this.context.asAbsolutePath(path.join('resources', 'dark', 'quillPen.svg'))
-    //             };
-    //         case Icon.search:
-    //             return {
-    //                 light: this.context.asAbsolutePath(path.join('resources', 'light', 'search.svg')),
-    //                 dark: this.context.asAbsolutePath(path.join('resources', 'dark', 'search.svg'))
-    //             };
-    //     }
-    //     return null;
     // }
 }
 

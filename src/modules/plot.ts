@@ -30,7 +30,10 @@ export class Plot
     workloads:Workload[]=[];
 
     /** コンストラクタ */
-    constructor(root:vscode.WorkspaceFolder, json:object)
+    constructor(
+        root:vscode.WorkspaceFolder,
+        private plotFile:vscode.Uri,
+        json:object)
     {
         this.root = root;
         const cs = 'chapters' in json ? json['chapters'] as []: [];
@@ -44,6 +47,12 @@ export class Plot
         }
 
         return;
+    }
+
+    /** 保存 */
+    async save()
+    {
+        await vscode.workspace.fs.writeFile(this.plotFile, Buffer.from(this.forSerialize()));
     }
 
     /** シリアライズ用のJSON文字列を返す */
@@ -68,6 +77,17 @@ export class Plot
         }, null, 4);
     }
 
+    /** ファイル一覧を取得する */
+    getChapterFiles()
+    {
+        let files:vscode.Uri[]=[];
+        for(let chapter of this.chapters)
+        {
+            files.push(vscode.Uri.joinPath(this.root.uri, chapter.fileElement.value));
+        }
+        return files;
+    }
+
     /** chapter を追加する */
     addChapter(path:string)
     {
@@ -76,34 +96,30 @@ export class Plot
         const c = new Chapter({'file':path});
         this.chapters.push(c);
         this.chapterElements.push(new Element(c, ElementType.chapter, c));
-
-        // ファイル監視の再登録
-        this.unWatchFiles();
-        this.watchFiles();
     }
 
-    unWatchFiles()
-    {
-        for(const chapter of this.chapters)
-        {
-            const filePath = vscode.Uri.joinPath(this.root.uri, chapter.fileElement.value);
-            fs.unwatchFile(filePath.fsPath);
-        }
-    }
-    watchFiles()
-    {
-        for(const chapter of this.chapters)
-        {
-            const filePath = vscode.Uri.joinPath(this.root.uri, chapter.fileElement.value);
-            vscode.window.showInformationMessage('watch: ' + filePath.fsPath);
-            // fs.watchFile(filePath.fsPath, {interval:3000}, this.recordWorkload);
-            fs.watchFile(
-                filePath.fsPath,
-                {interval:3000},
-                (curr,prev)=>{ this.recordWorkload(curr, prev, chapter.fileElement.value);
-            });
-        }
-    }
+    // unWatchFiles()
+    // {
+    //     for(const chapter of this.chapters)
+    //     {
+    //         const filePath = vscode.Uri.joinPath(this.root.uri, chapter.fileElement.value);
+    //         fs.unwatchFile(filePath.fsPath);
+    //     }
+    // }
+    // watchFiles()
+    // {
+    //     for(const chapter of this.chapters)
+    //     {
+    //         const filePath = vscode.Uri.joinPath(this.root.uri, chapter.fileElement.value);
+    //         vscode.window.showInformationMessage('watch: ' + filePath.fsPath);
+    //         // fs.watchFile(filePath.fsPath, {interval:3000}, this.recordWorkload);
+    //         fs.watchFile(
+    //             filePath.fsPath,
+    //             {interval:3000},
+    //             (curr,prev)=>{ this.recordWorkload(curr, prev, chapter.fileElement.value);
+    //         });
+    //     }
+    // }
     /** 作業量を保存する */
     recordWorkload(curr:fs.Stats, prev:fs.Stats, file:string)
     {
