@@ -43,11 +43,40 @@ async function getWorkload(): Promise<Workload[]>
 	}
 }
 
-export function analyze(context:vscode.ExtensionContext){
+/** 日毎の集計 */
+function dailyWL(workloads:Workload[]){
+	let rtn:[string[],any[],any[]] = [ ['x'], ['data1'], ['data2'] ];
+	for(let workload of workloads){
+		// 日付を取得
+		const d = getDateString(workload.date);
+		const i = rtn[0].indexOf(d);
+		if(i < 0)
+		{
+			rtn[0].push(d);
+			rtn[1].push(workload.size);
+			rtn[2].push(workload.fluctuation);
+		}else{
+			rtn[1][i] = workload.size;
+			rtn[2][i] += workload.fluctuation;
+		}
+	}
+	return rtn;
+}
+function getDateString(date:Date)
+{
+	return `${date.getFullYear()}-${ ('0' + (date.getMonth()+1)).slice(-2) }-${ ('0' + date.getDate()).slice(-2) }`;
+}
+
+
+export async function analyze(context:vscode.ExtensionContext){
     // TODO id等を指定する
 			const panel = vscode.window.createWebviewPanel('id', 'title', vscode.ViewColumn.Two, {enableScripts:true});
 
 			// ファイルの読み込み
+			// const workloads = await getWorkload();
+			// const daily = dailyWL(workloads);
+			// console.log('workloads: ', daily);
+			const daily = [];
 
 			// スクリプトファイルのパス取得
 			const d3js = panel.webview.asWebviewUri(vscode.Uri.file(path.join(context.extensionPath, 'vendor', 'd3', 'd3.min.js')));
@@ -70,11 +99,13 @@ export function analyze(context:vscode.ExtensionContext){
 								bindto: '#chart',
 								data: {
 								x: 'x',
-								columns: [
-									['x', '2013-01-01', '2013-01-02', '2013-01-03', '2013-01-04', '2013-01-05', '2013-01-06'],
-									['data1', 30, 200, 100, 400, 150, 250],
-									['data2', 130, 340, 200, 500, 250, 350],
-								],
+								// columns: [
+								// 	['x', '2013-01-01', '2013-01-02', '2013-01-03', '2013-01-04', '2013-01-05', '2013-01-06'],
+								// 	['data1', 30, 200, 100, 400, 150, 250],
+								// 	['data2', 130, 340, 200, 500, 250, 350],
+								// ],
+								columns: ${JSON.stringify(daily)}
+									,
 									axes: { data2: 'y2'},
 									types: { data2: 'bar' }
 								},

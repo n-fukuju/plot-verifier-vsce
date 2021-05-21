@@ -60,7 +60,7 @@ export function getPlotFile(fileName:string='plot.json'):vscode.Uri|undefined
  * ログのパスを取得する。
  * 取得できなかった場合、undefined
  */
-export function getWorkloadFile(fileName:string='plot_workload.tsv'):vscode.Uri|undefined
+export function getWorkloadFile(fileName:string='plot.sqlite3'):vscode.Uri|undefined
 {
     const folder = getFolder();
     if(folder)
