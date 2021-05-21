@@ -3,7 +3,6 @@ import * as vscode from 'vscode';
 
 import { Chapter } from "./chapter";
 import { Element, ElementType } from "./element";
-import { Workload } from "./workload";
 
 /** プロットを表すクラス */
 export class Plot
@@ -25,9 +24,6 @@ export class Plot
 
     /** ルートフォルダ */
     root:vscode.WorkspaceFolder;
-
-    /** 作業量 */
-    workloads:Workload[]=[];
 
     /** コンストラクタ */
     constructor(
@@ -120,17 +116,6 @@ export class Plot
     //         });
     //     }
     // }
-    /** 作業量を保存する */
-    recordWorkload(curr:fs.Stats, prev:fs.Stats, file:string)
-    {
-        vscode.window.showInformationMessage('watch: ' + curr.size);
-        this.workloads.push({
-            date: new Date(),
-            file: file,
-            size: curr.size,
-            fluctuation: curr.size - prev.size
-        });
-    }
 
     moveUpChapter(chapter:Element):boolean{ return this.moveChapter(chapter,true); }
     moveDownChapter(chapter:Element):boolean{ return this.moveChapter(chapter,false); }

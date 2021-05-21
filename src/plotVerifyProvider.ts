@@ -4,12 +4,12 @@ import * as fs from 'fs';
 import * as readline from 'readline';
 
 import { Plot } from './modules/plot';
-import { Workload } from './modules/workload';
 import { Element, ElementType } from './modules/element';
 import { Chapter } from './modules/chapter';
 import { Icon, getIcon } from './modules/icon';
 import { getPlot, getFolder } from './modules/util';
 import { Watcher } from './modules/watcher';
+import { analyze } from './modules/workload';
 
 /** プロット検証ツリープロバイダ */
 export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
@@ -24,7 +24,9 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
     /** ファイル監視 */
     watcher:Watcher = new Watcher();
 
-    constructor(private context: vscode.ExtensionContext){
+    context:vscode.ExtensionContext;
+
+    constructor(private _context: vscode.ExtensionContext){
         // vscode.window.onDidChangeActiveTextEditor(() => this.onActiveEditorChanged());
         // vscode.workspace.onDidChangeTextDocument(e => this.onDocumentChanged(e));
 
@@ -33,6 +35,10 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
 		// vscode.workspace.onDidChangeConfiguration(() => {
 		// 	this.autoRefresh = vscode.workspace.getConfiguration('jsonOutline').get('autorefresh');
         // });
+
+        // 拡張機能のローカルパス
+        this.context = _context;
+
         // 常時表示
         vscode.commands.executeCommand('setContext', 'plotVerifierEnabled', true);
         // 初回
@@ -607,6 +613,8 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
     // private onDocumentChanged(changeEvent: vscode.TextDocumentChangeEvent): void
     // {
     // }
+
+    analyze(){ analyze(this.context); }
 }
 
 

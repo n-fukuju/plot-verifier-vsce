@@ -57,6 +57,19 @@ export function getPlotFile(fileName:string='plot.json'):vscode.Uri|undefined
 }
 
 /**
+ * ログのパスを取得する。
+ * 取得できなかった場合、undefined
+ */
+export function getWorkloadFile(fileName:string='plot_workload.tsv'):vscode.Uri|undefined
+{
+    const folder = getFolder();
+    if(folder)
+    {
+        return vscode.Uri.joinPath(vscode.Uri.file(folder), fileName);
+    }
+}
+
+/**
  * 作業中のフォルダを取得する。
  * 取得できなかった場合、undefined
  */
