@@ -518,7 +518,7 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
                 rowCount += Math.ceil(line.length / col);
             }
             pageCount = Math.ceil(rowCount / row);
-            console.log(`length: ${textCount},  page: ${page},  rowCount: ${rowCount},  pageCount: ${pageCount}`);
+            // console.log(`length: ${textCount},  page: ${page},  rowCount: ${rowCount},  pageCount: ${pageCount}`);
 
             if(max){
                 element.label = `最大 ${page}枚`;
@@ -552,7 +552,7 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
             {
                 textCount += line.length;
             }
-            console.log(`length: ${textCount}, chars: ${chars}`);
+            // console.log(`length: ${textCount}, chars: ${chars}`);
 
             if(max){
                 element.label = `最大 ${chars}字`;
