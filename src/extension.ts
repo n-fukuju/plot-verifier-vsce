@@ -6,7 +6,7 @@ import { Element } from './modules/element';
 
 // エントリポイント
 export function activate(context: vscode.ExtensionContext) {
-	console.log('extension.ts:: activate()');
+	// console.log('extension.ts:: activate()');
 
 	// コマンドを登録
 	// let disposable = vscode.commands.registerCommand('plot-verifier-vsce.helloWorld', () => {

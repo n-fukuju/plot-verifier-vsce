@@ -1,23 +1,30 @@
 import { watchFile, unwatchFile } from 'fs';
 import { basename } from 'path';
 import * as vscode from 'vscode';
-import nedb = require('nedb');
-
-import { getWorkloadFile } from './util';
-import { stringify } from 'querystring';
 
 import { save } from './workload';
 
 /** ファイルを監視するクラス */
 export class Watcher {
     constructor(
+        /**
+         * 変更のハンドラ
+         * @param file 変更のあったファイルのフルパス
+         */
+        private listener: (file:string)=>void,
+        /** 監視のインターバル */
+        private interval:number=3000,
+        /** 対象ファイル */
         private files:vscode.Uri[]=[],
-        private interval:number=3000
     ){}
     
+    /**
+     * 監視対象のファイルを置き換える。以前の監視対象は対象外となる。
+     * @param files 監視対象
+     */
     replace(files:vscode.Uri[])
     {
-        // いったんすべて解除
+        // いったんすべての監視を解除
         for(let file of this.files)
         {
             unwatchFile(file.fsPath);
@@ -30,9 +37,10 @@ export class Watcher {
             const fileName = basename(file.fsPath);
             watchFile(file.fsPath, {interval:this.interval}, (curr,prev)=>{
                 console.log(`watched: ${file}, ${curr.size}`);
-                // this.save(`${(new Date()).toLocaleString('ja')}\t${fileName}\t${curr.size}\t${curr.size-prev.size}`);
-                // this.insert(fileName, curr.size, curr.size-prev.size);
+                // 保存処理
                 save({date:new Date(), file:fileName, size:curr.size, diff:curr.size-prev.size});
+                // ツリービューへの通知
+                this.listener(file.fsPath); 
             });
         }
     }

@@ -198,6 +198,21 @@
 					"group": "inline"
 				}
 			]
+		},
+		"configuration": {
+			"title": "設定",
+			"properties": {
+				"plotexr.autorefresh": {
+					"type": "boolean",
+					"default": false,
+					"description": "自動更新"
+				},
+				"plotexr.analyzelog": {
+					"type": "boolean",
+					"default": false,
+					"description": "解析ログ出力"
+				}
+			}
 		}
 	},
 	"scripts": {

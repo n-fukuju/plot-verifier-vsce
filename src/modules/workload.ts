@@ -5,6 +5,7 @@ import * as vscode from 'vscode';
 import nedb = require('nedb');
 import { getWorkloadFile, getWorkloadLogFile } from './util';
 
+/** 作業量 */
 interface Workload {
     /** 作業日時 */
     date:Date;
@@ -20,7 +21,7 @@ interface Workload {
 /** 作業量を追記 */
 export function save(workload:Workload)
 {
-	// TODO Date に丸める
+	// DB初期化
 	const db = new nedb({
 		filename: getWorkloadFile().fsPath,
 		autoload: true
@@ -28,7 +29,8 @@ export function save(workload:Workload)
 	const db2 = new nedb({
 		filename: getWorkloadLogFile().fsPath,
 		autoload:true
-	})
+	});
+	// 日付に丸める
 	const date = new Date(
 		workload.date.getFullYear(),
 		workload.date.getMonth(),
@@ -37,7 +39,7 @@ export function save(workload:Workload)
 	);
 	db.find({file:workload.file, date:date},(err:any,rows:Workload[])=>{
 		if(rows.length > 0){
-			// 加算
+			// 同日の作業量を合算
 			db.update(
 				{file:workload.file, date:date},
 				{$inc:{
@@ -54,44 +56,17 @@ export function save(workload:Workload)
 			});
 		}
 	});
-	// ログ
+	// 詳細ログをそのまま出力
 	db2.insert(workload);
 }
 
-// async function getWorkload(): Promise<Workload[]>
-// {
-// 	const workloadFile = getWorkloadFile();
-// 	if(workloadFile){
-// 		let workloads:Workload[]=[];
-// 		if(existsSync(workloadFile.fsPath)){
-// 			let content = Buffer.from(await vscode.workspace.fs.readFile(workloadFile)).toString('utf8');
-// 			for(let row of content.split(EOL))
-// 			{
-// 				let cells = row.split('\t');
-// 				if(cells.length >= 4){
-// 					try{
-// 						workloads.push({
-// 							date: new Date(cells[0]),
-// 							file: cells[1],
-// 							size: Number(cells[2]),
-// 							fluctuation: Number(cells[3])
-// 						});
-// 					}catch{console.log('error on load workloads: ', row); }
-// 				}
-// 			}
-// 		}
-// 		return Promise.resolve(workloads);
-// 	}else{
-// 		return Promise.reject('workload ファイルを開けませんでした');
-// 	}
-// }
 function getWorkload(){
 	const db = new nedb({
 		filename: getWorkloadFile().fsPath,
 		autoload: true
 	});
 	db.find({},(err:any,workloads:Workload[])=>{
-		console.log(workloads)
+		console.log(workloads);
 	});
 }
 
