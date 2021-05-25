@@ -9,7 +9,7 @@ import { Chapter } from './modules/chapter';
 import { Icon, getIcon } from './modules/icon';
 import { getPlot, getFolder } from './modules/util';
 import { Watcher } from './modules/watcher';
-import { analyze } from './modules/workload';
+import { analyze, save } from './modules/workload';
 
 /** プロット検証ツリープロバイダ */
 export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
@@ -38,23 +38,37 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
 		vscode.workspace.onDidChangeConfiguration((e:vscode.ConfigurationChangeEvent) => {
             if(e.affectsConfiguration('plotexr.autorefresh')){
                 this.autoRefresh = vscode.workspace.getConfiguration('plotexr').get<boolean>('autorefresh');
+                if(!this.autoRefresh && !this.analyzeLog){ this.watcher.replace([]); }
+                else{ this.watcher.replace(this.plot.getChapterFiles());}
             }
             if(e.affectsConfiguration('plotexr.analyzelog')){
                 this.analyzeLog = vscode.workspace.getConfiguration('plotexr').get<boolean>('analyzelog');
+                if(!this.autoRefresh && !this.analyzeLog){ this.watcher.replace([]); }
+                else{ this.watcher.replace(this.plot.getChapterFiles());}
             }
         });
         // 監視処理
         // ※ function にすると、this参照が関数になるので、このハンドラはアロー関数で実装する
-        this.watcher = new Watcher((file:string)=>{
+        this.watcher = new Watcher((file:string, date:Date, size:number, diff:number)=>{
             // console.log('file on change: ', file);
-            for(const chapter of this.plot.chapters)
+            // ログの出力
+            if(this.analyzeLog)
             {
-                const filePath = vscode.Uri.joinPath(this.plot.root.uri, chapter.fileElement.value);
-                if(filePath.fsPath === file)
+                const fileName = path.basename(file);
+                save({date:date, file:fileName, size:size, diff:diff});
+            }
+
+            // ツリービュー要素の更新
+            if(this.autoRefresh){
+                for(const chapter of this.plot.chapters)
                 {
-                    // 一致したファイルのみ表示を更新する
-                    this.compareFileSize(chapter, filePath.fsPath);
-                    this._onDidChangeTreeData.fire(undefined);
+                    const filePath = vscode.Uri.joinPath(this.plot.root.uri, chapter.fileElement.value);
+                    if(filePath.fsPath === file)
+                    {
+                        // 一致したファイルのみ表示を更新する
+                        this.compareFileSize(chapter, filePath.fsPath);
+                        this._onDidChangeTreeData.fire(undefined);
+                    }
                 }
             }
         });
@@ -66,7 +80,6 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
         vscode.commands.executeCommand('setContext', 'plotVerifierEnabled', true);
         // 初回
         this.refresh();
-
     }
 
     /** Interface の実装 */

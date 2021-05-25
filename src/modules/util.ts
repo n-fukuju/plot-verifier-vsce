@@ -60,7 +60,7 @@ export function getPlotFile(fileName:string='plot.json'):vscode.Uri|undefined
  * ログのパスを取得する。
  * 取得できなかった場合、undefined
  */
-export function getWorkloadFile(fileName:string='plot_workload.json'):vscode.Uri|undefined
+export function getWorkloadFile(fileName:string='plot_workload.nedb'):vscode.Uri|undefined
 {
     const folder = getFolder();
     if(folder)
@@ -73,7 +73,7 @@ export function getWorkloadFile(fileName:string='plot_workload.json'):vscode.Uri
  * ログのパスを取得する。
  * 取得できなかった場合、undefined
  */
-export function getWorkloadLogFile(fileName:string='plot_workload_log.json'):vscode.Uri|undefined
+export function getWorkloadLogFile(fileName:string='plot_workload_log.nedb'):vscode.Uri|undefined
 {
     const folder = getFolder();
     if(folder)
