@@ -1,7 +1,10 @@
 Plotexr
 ===
 
-本拡張は、想定通りの物書きができているか検証するためのツリービューを提供します。  
+本拡張は、想定通りの物書きができているか検証するため、以下の機能を提供します。  
+* テキスト検証を一覧するツリービュー
+* 作業ログおよび可視化ダッシュボード
+
 主に小説用を想定しています。  
 
 ![file](https://github.com/n-fukuju/plot-verifier-vsce/raw/master/images/feature.png)  

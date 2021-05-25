@@ -19,11 +19,13 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
 
     /** プロット（?）クラス */
     private plot: Plot;
+    /** [ユーザ設定] 自動更新フラグ */
     private autoRefresh = false;
+    /** [ユーザ設定] 解析ログフラグ */
     private analyzeLog = false;
 
     /** ファイル監視 */
-    watcher:Watcher;// = new Watcher(this.fileOnChange);
+    watcher:Watcher;
 
     context:vscode.ExtensionContext;
 

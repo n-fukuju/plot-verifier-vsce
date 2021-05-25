@@ -106,7 +106,11 @@
 			},
 			{
 				"command": "plot-verifier-vsce.analyze",
-				"title": "進捗分析"
+				"title": "進捗分析",
+				"icon": {
+					"light": "resources/light/chart.svg",
+					"dark": "resources/dark/chart.svg"
+				}
 			}
 		],
 		"views": {
@@ -127,6 +131,11 @@
 				},
 				{
 					"command": "plot-verifier-vsce.regist",
+					"when": "view == plotVerifier",
+					"group": "navigation"
+				},
+				{
+					"command": "plot-verifier-vsce.analyze",
 					"when": "view == plotVerifier",
 					"group": "navigation"
 				}
@@ -233,7 +242,6 @@
 		"@types/vscode": "^1.50.0",
 		"@typescript-eslint/eslint-plugin": "^4.1.1",
 		"@typescript-eslint/parser": "^4.1.1",
-		"electron-rebuild": "^2.3.5",
 		"eslint": "^7.9.0",
 		"glob": "^7.1.6",
 		"mocha": "^8.1.3",

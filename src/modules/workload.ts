@@ -97,7 +97,7 @@ function getDateString(date:Date)
 
 export async function analyze(context:vscode.ExtensionContext){
     // TODO id等を指定する
-			const panel = vscode.window.createWebviewPanel('id', 'title', vscode.ViewColumn.Two, {enableScripts:true});
+			const panel = vscode.window.createWebviewPanel('plotexr.analyze', 'ダッシュボード', vscode.ViewColumn.Two, {enableScripts:true});
 
 			// ファイルの読み込み
 			// const workloads = await getWorkload();
@@ -122,7 +122,10 @@ export async function analyze(context:vscode.ExtensionContext){
 						<script src="${c3js}"></script>
 					</head>
 					<body>
+						<!-- 日次 -->
 						<div id="chart" style="background-color:white"></div>
+						<!-- ファイル単位の Donut Chart -->
+						<div id="donut" style="background-color:white"></div>
 						<script>
 							var chart = c3.generate({
 								bindto: '#chart',
@@ -147,6 +150,17 @@ export async function analyze(context:vscode.ExtensionContext){
 									y2: {label: {text: 'Y2'}}
 								}
 							});
+							var donut = c3.generate({
+								bindto: '#donut',
+								data: {
+									columns:[ 
+										['data1', 30],
+										['data2', 120],
+									],
+									type: 'donut'
+								},
+								donut: {title: 'chat title'}
+							})
 						</script>
 					</body>
 				</html>
