@@ -14,17 +14,33 @@ const db = {
     // })
 };
 
-// 2週間分の作業データ
-const days = [1,2,3,4,5,6,7, 8,9,10,11,12,13,14];
-const size = [10,30,45,90,120,190,215, 225,235,285,310,340,350,365];
-const diff = [10,20,15,45,30,70,25, 10,10,50,25,30,10,15];
-for(let day of days){
-    db.daily.insert({
-        date: new Date(2021,0,day, 9,0,0),  // 月は0始まり。
-        file: 'test.txt',
-        size: size[day-1],
-        diff: diff[day-1]
-    }, (err)=>{
-        if(err){ console.log('nedb error: ', err); }
-    });
+// 適当な作業データ
+const diff1 = [10,20,15,45,30,70,25, 10,10,50,25,30,10,15];
+const diff2 = [ 0, 0, 0, 0, 0, 0, 0,  0, 0,30, 5, 0,50,35];
+let size1 = 0;
+let size2 = 0;
+for(let day=1;day<=14;day++){
+    let d1 = diff1[day-1];
+    let d2 = diff2[day-1];
+
+    if(d1 > 0){
+        db.daily.insert({
+            date: new Date(2021,0,day, 9,0,0),  // 月は0始まり。
+            file: 'file1.txt',
+            size: size1 += d1,
+            diff: d1
+        }, (err)=>{
+            if(err){ console.log('nedb error: ', err); }
+        });
+    }
+    if(d2 > 0){
+        db.daily.insert({
+            date: new Date(2021,0,day, 9,0,0),
+            file: 'file2.txt',
+            size: size2 += d2,
+            diff: d2
+        }, (err)=>{
+            if(err){ console.log('nedb error: ', err); }
+        });
+    }
 }
