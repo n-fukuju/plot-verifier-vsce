@@ -490,6 +490,7 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
             let size = Number(matchKB[1]);
             const stat = fs.statSync(fsPath);
             const current = stat.size/1024;
+            element.achievement = current / size * 100;
             if(max){
                 element.label = `最大 ${matchKB[0]}`;
                 if(stat.size > size * 1024) {
@@ -517,6 +518,7 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
             // const stat = fs.statSync(filePath.fsPath);
             const stat = fs.statSync(fsPath);
             const current = stat.size/1024/1024;
+            element.achievement = current / size * 100;
             if(max){
                 element.label = `最大 ${matchMB[0]}`;
                 if(stat.size > size * 1024 * 1024) {
@@ -555,7 +557,7 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
             }
             pageCount = Math.ceil(rowCount / row);
             // console.log(`length: ${textCount},  page: ${page},  rowCount: ${rowCount},  pageCount: ${pageCount}`);
-
+            element.achievement = pageCount / page * 100;
             if(max){
                 element.label = `最大 ${page}枚`;
                 if(pageCount > page){
@@ -589,7 +591,7 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
                 textCount += line.length;
             }
             // console.log(`length: ${textCount}, chars: ${chars}`);
-
+            element.achievement = textCount / chars * 100;
             if(max){
                 element.label = `最大 ${chars}字`;
                 if(textCount > chars){
@@ -666,7 +668,21 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
     // }
 
     /** 分析コマンド */
-    analyze(){ analyze(this.context); }
+    analyze(){
+        // 達成度を渡す。
+        const achievements = [];
+        this.plot.chapters.forEach((plot)=>{
+            const filename = plot.fileElement.value;
+            plot.minimumElements.forEach((elm)=>{
+                achievements.push({
+                    file: filename,
+                    value: elm.label,
+                    achievement: elm.achievement
+                });
+            });
+        });
+        analyze(this.context, achievements);
+    }
 }
 
 

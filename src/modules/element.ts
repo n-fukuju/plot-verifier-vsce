@@ -15,6 +15,8 @@ export class Element
     isError: boolean;
     /** 項目から親要素への参照 */
     chapter: Chapter;
+    /** 達成度%（minimum用） */
+    achievement: number=0;
     /** コンストラクタ */
     constructor(chapter:Chapter, type:ElementType, value:any, label:string="", description:string="", isError=false)
     {

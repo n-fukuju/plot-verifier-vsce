@@ -60,13 +60,18 @@ export function save(workload:Workload)
 	db2.insert(workload);
 }
 
+/** 読み込み */
 function getWorkload(){
-	const db = new nedb({
-		filename: getWorkloadFile().fsPath,
-		autoload: true
-	});
-	db.find({},(err:any,workloads:Workload[])=>{
-		console.log(workloads);
+	return new Promise((resolve,reject)=>{
+		const db = new nedb({
+			filename: getWorkloadFile().fsPath,
+			autoload: true
+		});
+		db.find({}).sort({date:1}).exec((err:any,workloads:Workload[])=>{
+			if(err){ reject(err); }
+			// console.log(workloads);
+			resolve(workloads);
+		});
 	});
 }
 
@@ -95,7 +100,7 @@ function getDateString(date:Date)
 }
 
 
-export async function analyze(context:vscode.ExtensionContext){
+export async function analyze(context:vscode.ExtensionContext, achievements:any[]){
     // TODO id等を指定する
 			const panel = vscode.window.createWebviewPanel('plotexr.analyze', 'ダッシュボード', vscode.ViewColumn.Two, {enableScripts:true});
 
@@ -105,7 +110,7 @@ export async function analyze(context:vscode.ExtensionContext){
 			// console.log('workloads: ', daily);
 			// const daily = [];
 
-			getWorkload();
+			const workloads = await getWorkload();
 
 			// スクリプトファイルのパス取得
 			const d3js = panel.webview.asWebviewUri(vscode.Uri.file(path.join(context.extensionPath, 'vendor', 'd3', 'd3.min.js')));
@@ -122,45 +127,107 @@ export async function analyze(context:vscode.ExtensionContext){
 						<script src="${c3js}"></script>
 					</head>
 					<body>
-						<!-- 日次 -->
-						<div id="chart" style="background-color:white"></div>
+						<!-- 日次、今週、今月 -->
+						<p>日次</p>
+						<div id="daily" style="background-color:white"></div>
 						<!-- ファイル単位の Donut Chart -->
+						<p>ファイル単位</p>
 						<div id="donut" style="background-color:white"></div>
+						<div id="gauge" style="background-color:white"></div>
 						<script>
-							var chart = c3.generate({
-								bindto: '#chart',
+							// stringify() した時点で、.date は string になっている。
+							var workloads = ${JSON.stringify(workloads)};
+							var achievements = ${JSON.stringify(achievements)};
+							// console.log(workloads);
+							console.log(achievements);
+							var daily = c3.generate({
+								bindto: '#daily',
 								data: {
-								x: 'x',
-								columns: [
-									['x', '2013-01-01', '2013-01-02', '2013-01-03', '2013-01-04', '2013-01-05', '2013-01-06'],
-									['data1', 30, 200, 100, 400, 150, 250],
-									['data2', 130, 340, 200, 500, 250, 350],
-								],
-								// columns: {JSON.stringify(daily)}
-								// 	,
-									axes: { data2: 'y2'},
-									types: { data2: 'bar' }
+									x: 'x',
+									columns: [
+										['x'],
+										['size'],
+										['diff'],
+									],
+									// columns: {JSON.stringify(daily)}
+									// 	,
+										axes: { diff: 'y2'},
+										types: { size: 'bar' }
 								},
 								axis: {
 									x: {
 										type: 'timeseries',
 										tick: { format: '%Y-%m-%d' }
 									},
-									y: {label: {text: 'Y'}},
-									y2: {label: {text: 'Y2'}}
+									y: {label: {text: 'size'}},
+									y2: {
+										label: {text: 'diff'},
+										show: true
+									}
+								},
+								color: {
+									pattern: ['#ffbb78', '#1f77b4', '#2ca02c']
 								}
 							});
-							var donut = c3.generate({
-								bindto: '#donut',
-								data: {
-									columns:[ 
-										['data1', 30],
-										['data2', 120],
-									],
-									type: 'donut'
+
+							// データを後からロードすると、アニメーションしてくれるので見栄えがする
+							daily.load({
+								columns: [
+									// ['x', '2013-01-01', '2013-01-02', '2013-01-03', '2013-01-04', '2013-01-05', '2013-01-06'],
+									// ['size', 30, 100, 130, 200, 210, 250],
+									// ['diff', 30, 70, 30, 70, 10, 40],
+									['x'].concat(workloads.map((w)=>{return w.date.substring(0,10) })),
+									['size'].concat(workloads.map((w)=>{return w.size})),
+									['diff'].concat(workloads.map((w)=>{return w.diff})),
+								]
+							});
+
+							// var donut = c3.generate({
+							// 	bindto: '#donut',
+							// 	data: {
+							// 		columns:[ 
+							// 		// 	['data1', 30],
+							// 		// 	['data2', 120],
+							// 		],
+							// 		type: 'donut',
+							// 		labels: false
+							// 	},
+							// 	donut: {title: 'abc.txt'},
+							// 	legend: {show: false}
+							// });
+							// donut.load({
+							// 	columns:[
+							// 		['済み', 900],
+							// 		['残', 200]
+							// 	]
+							// });
+
+							var gauge = c3.generate({
+								bindto: '#gauge',
+								data:{
+									// columns:[['.txt',0]],
+									columns:[],
+									type: 'gauge'
 								},
-								donut: {title: 'chat title'}
-							})
+								gauge: {},
+								color: {
+									pattern: ['#FF0000', '#F97600', '#F6C600', '#60B044'],
+									threshold:{
+										values:[30, 60, 90, 100]
+									}
+								}
+							});
+							// カラム名を変えると、複数 load() できる
+							// gauge.load({columns:[['.txt', 90]]});
+							if(achievements.length > 0)
+							{
+								var ar = achievements[0];
+								// gauge.unload({columns:[['.txt']]})
+								gauge.load({
+									columns:[[ar.file, ar.achievement]]
+								});
+							}
+
 						</script>
 					</body>
 				</html>

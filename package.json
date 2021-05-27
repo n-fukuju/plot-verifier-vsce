@@ -232,7 +232,8 @@
 		"pretest": "npm run compile && npm run lint",
 		"test": "node ./out/test/runTest.js",
 		"package": "vsce package",
-		"installx": "code --install-extension ./plot-verifier-0.0.1.vsix"
+		"installx": "code --install-extension ./plot-verifier-0.0.1.vsix",
+		"make:testdata":"npx ts-node ./src/script/testdata.ts"
 	},
 	"devDependencies": {
 		"@types/glob": "^7.1.3",
