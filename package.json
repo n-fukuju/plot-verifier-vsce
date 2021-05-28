@@ -213,13 +213,18 @@
 			"properties": {
 				"plotexr.autorefresh": {
 					"type": "boolean",
-					"default": false,
-					"description": "自動更新"
+					"default": true,
+					"description": "対象ファイルの更新時に、ツリービューの表示を自動更新する。"
 				},
 				"plotexr.analyzelog": {
 					"type": "boolean",
-					"default": false,
-					"description": "解析ログ出力"
+					"default": true,
+					"description": "解析ログの出力を行う。"
+				},
+				"plotexr.darktheme": {
+					"type": "boolean",
+					"default": true,
+					"description": "解析ダッシュボードをダークテーマ向けにするか否か。（設定後は、ダッシュボードを閉じて開きなおしてください）"
 				}
 			}
 		}

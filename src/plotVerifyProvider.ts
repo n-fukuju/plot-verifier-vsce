@@ -23,6 +23,8 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
     private autoRefresh = false;
     /** [ユーザ設定] 解析ログフラグ */
     private analyzeLog = false;
+    /** [ユーザ設定] ダークテーマ */
+    private darkTheme
 
     /** ファイル監視 */
     watcher:Watcher;
@@ -36,6 +38,7 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
         // 設定を取得する。
         this.autoRefresh = vscode.workspace.getConfiguration('plotexr').get<boolean>('autorefresh');
         this.analyzeLog = vscode.workspace.getConfiguration('plotexr').get<boolean>('analyzelog');
+        this.darkTheme = vscode.workspace.getConfiguration('plotexr').get<boolean>('darktheme');
         // 設定の更新時の処理
 		vscode.workspace.onDidChangeConfiguration((e:vscode.ConfigurationChangeEvent) => {
             if(e.affectsConfiguration('plotexr.autorefresh')){
@@ -47,6 +50,9 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
                 this.analyzeLog = vscode.workspace.getConfiguration('plotexr').get<boolean>('analyzelog');
                 if(!this.autoRefresh && !this.analyzeLog){ this.watcher.replace([]); }
                 else{ this.watcher.replace(this.plot.getChapterFiles());}
+            }
+            if(e.affectsConfiguration('plotexr.darktheme')){
+                this.darkTheme = vscode.workspace.getConfiguration('plotexr').get<boolean>('darktheme');
             }
         });
         // 監視処理
@@ -681,7 +687,7 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
                 });
             });
         });
-        analyze(this.context, achievements);
+        analyze(this.context, achievements, this.darkTheme);
     }
 }
 
