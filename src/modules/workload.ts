@@ -15,6 +15,8 @@ interface Workload {
     size:number;
     /** 作業量（増減） */
     diff:number;
+	/** 作業時間（分） */
+	elapsed:number;
 }
 
 
@@ -128,7 +130,7 @@ function getWorkload(){
 
 export async function analyze(context:vscode.ExtensionContext, achievements:any[], isDark:boolean=true){
     
-	const panel = vscode.window.createWebviewPanel('plotexr.analyze', 'ダッシュボード', vscode.ViewColumn.Two, {enableScripts:true});
+	const panel = vscode.window.createWebviewPanel('plotexr.analyze', 'ダッシュボード', vscode.ViewColumn.One, {enableScripts:true});
 
 	// ファイルの読み込み
 	// const workloads = await getWorkload();
@@ -143,36 +145,64 @@ export async function analyze(context:vscode.ExtensionContext, achievements:any[
 	const c3css = panel.webview.asWebviewUri(vscode.Uri.file(path.join(context.extensionPath, 'vendor', 'c3', 'c3.css')));
 	const c3js = panel.webview.asWebviewUri(vscode.Uri.file(path.join(context.extensionPath, 'vendor', 'c3', 'c3.min.js')));
 	const jquery = panel.webview.asWebviewUri(vscode.Uri.file(path.join(context.extensionPath, 'vendor', 'jquery', 'jquery-3.6.0.min.js')));
+	const bcss = panel.webview.asWebviewUri(vscode.Uri.file(path.join(context.extensionPath, 'vendor', 'bootstrap', 'bootstrap.min.css')));
+	const bjs = panel.webview.asWebviewUri(vscode.Uri.file(path.join(context.extensionPath, 'vendor', 'bootstrap', 'bootstrap.min.js')));
 
+	/** ダークテーマ向けスタイル（文字色を白に） */
 	const darkTheme = `
 	text { fill: white; color: white; }
 	.c3-legend-item { fill: white; }
 	.c3-chart-arc .c3-gauge-value { fill: white; }
 	.c3-axis-x path, .c3-axis-x line, .c3-axis-y path, .c3-axis-y line, .c3-axis-y2 path, .c3-axis-y2 line{ stroke: white; }
+	.c3-tooltip tbody tr td {color: black;}
 	`;
 
 	const updateWebview = ()=>{
 		panel.webview.html = `
 		<!DOCTYPE html>
-		<html lang="ja">
+		<html lang="ja" class="bg-transparent">
 			<head>
+				<meta charset="utf-8">
 				<script src="${d3js}" charset="utf-8"></script>
 				<link href="${c3css}" rel="stylesheet">
 				<script src="${c3js}"></script>
 				<script src="${jquery}"></script>
+				<link href="${bcss}" rel="stylesheet">
+				<script src="${bjs}"></script>
 				<style>
 					${isDark? darkTheme: ""}
+					/* Bootstrap の背景色を無効化 */
+					body { background-color: transparent; }
 				</style>
 			</head>
 			<body>
-				<!-- 日次、今週、今月 -->
-				<p>日次</p>
-				<select id="file"></select>
-				<div id="daily"></div>
-				<!-- ファイル単位の Donut Chart -->
-				<p>ファイル単位</p>
-				<div id="donut" style="background-color:gray"></div>
-				<div id="gauge"></div>
+				<main class="container ${isDark? "text-light": "text-dark"}">
+					<div class="text-center">
+						<h1>analyze dashboard (0x0)</h1>
+					</div>
+
+					<div>
+						<!-- 作業量チャート -->
+						<div class="row">
+							<div class="col-3">
+								<select id="file" class="form-select form-select-sm"></select>
+							</div>
+							<div class="col-2">
+								<select id="range" class="form-select form-select-sm">
+									<option value="all" selected>全期間</option>
+									<option value="week">今週</option>
+									<option value="month">今月</option>
+								</select>
+							</div>
+						</div>
+						<div id="daily"></div>
+					</div>
+
+					<!-- ファイルごと進捗 -->
+					<div id="gaugeArea" class="container">
+					</div>
+				</main>
+				
 				<script>
 					// stringify() した時点で、.date は string になっている。
 					var workloads = ${JSON.stringify(workloads)};
@@ -182,6 +212,9 @@ export async function analyze(context:vscode.ExtensionContext, achievements:any[
 					for(var file of Object.keys(workloads))
 					{
 						select.append($("<option>").text(file).val(file));
+					}
+					if(workloads.length>0){
+						select.val(Object.keys(workloads)[0]);
 					}
 					// console.log(workloads);
 					console.log(achievements);
@@ -237,74 +270,39 @@ export async function analyze(context:vscode.ExtensionContext, achievements:any[
 						});
 					});
 
-
-					// var donut = c3.generate({
-					// 	bindto: '#donut',
-					// 	data: {
-					// 		columns:[ 
-					// 		// 	['data1', 30],
-					// 		// 	['data2', 120],
-					// 		],
-					// 		type: 'donut',
-					// 		labels: false
-					// 	},
-					// 	donut: {title: 'abc.txt'},
-					// 	legend: {show: false}
-					// });
-					// donut.load({
-					// 	columns:[
-					// 		['済み', 900],
-					// 		['残', 200]
-					// 	]
-					// });
-
-					// var gauge = c3.generate({
-					// 	bindto: '#gauge',
-					// 	data:{
-					// 		// columns:[['.txt',0]],
-					// 		columns:[],
-					// 		type: 'gauge'
-					// 	},
-					// 	gauge: {},
-					// 	color: {
-					// 		pattern: ['#FF0000', '#F97600', '#F6C600', '#60B044'],
-					// 		threshold:{
-					// 			values:[30, 60, 90, 100]
-					// 		}
-					// 	}
-					// });
-					// // カラム名を変えると、複数 load() できる
-					// // gauge.load({columns:[['.txt', 90]]});
-					// if(achievements.length > 0)
-					// {
-					// 	var ar = achievements[0];
-					// 	// gauge.unload({columns:[['.txt']]})
-					// 	gauge.load({
-					// 		columns:[[ar.file, ar.achievement]]
-					// 	});
-					// }
-
-					// for(var ac of achievements)
+					var area = $("#gaugeArea");
+					var colCount = 1;
+					var row;
 					for(var i=0; i<achievements.length; i++)
 					{
 						var ac = achievements[i];
 						var id = "gauge_" + i
 						var gauge = $("<div>").attr("id", id);
-						$("#gauge").append(gauge);
+						// 3カラムごと
+						if(colCount === 1){
+							row = $('<div class="row"></div>').appendTo(area);
+						}
+						$('<div class="col-4"></div>').append(gauge).appendTo(row);
+						if(colCount++ >= 3){
+							colCount = 1;
+						}
+						
+						// チャート生成
 						var chart = c3.generate({
 							bindto: "#" + id,
 							data:{ columns:[], type: 'gauge'},
 							gauge: {},
 							color: {
-										pattern: ['#FF0000', '#F97600', '#F6C600', '#60B044'],
-										threshold:{
-											values:[30, 60, 90, 100]
-										}
-									}
+								pattern: ['#FF0000', '#F97600', '#F6C600', '#60B044'],
+								threshold:{
+									values:[30, 60, 90, 100]
+								}
+							},
+							tooltip: { show: false }
 						})
 						chart.load({
 							columns:[[ac.file, ac.achievement]]
-						})
+						});
 					}
 
 				</script>

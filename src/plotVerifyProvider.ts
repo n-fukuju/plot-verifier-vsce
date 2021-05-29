@@ -675,18 +675,31 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
 
     /** 分析コマンド */
     analyze(){
-        // 達成度を渡す。
+        // 達成度（最小、記述）を渡す。
         const achievements = [];
         this.plot.chapters.forEach((plot)=>{
             const filename = plot.fileElement.value;
+            // 最小項目の達成率
             plot.minimumElements.forEach((elm)=>{
                 achievements.push({
-                    file: filename,
+                    file: filename + " [最小項目]",
                     value: elm.label,
                     achievement: elm.achievement
                 });
             });
+            // 記述項目の達成率
+            if(plot.conditionElements.length > 0){
+                let count = plot.conditionElements.length;
+                let count2 = plot.conditionElements.filter(elm=>!elm.isError).length;
+                achievements.push({
+                    file: filename + " [記述項目]",
+                    value: "",
+                    achievement: count2 / count * 100
+                });
+            }
         });
+
+        // ダッシュボード表示
         analyze(this.context, achievements, this.darkTheme);
     }
 }
