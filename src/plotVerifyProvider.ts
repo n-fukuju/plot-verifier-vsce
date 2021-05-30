@@ -23,8 +23,10 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
     private autoRefresh = false;
     /** [ユーザ設定] 解析ログフラグ */
     private analyzeLog = false;
+    /** [ユーザ設定] 自動更新インターバル */
+    private interval:number;
     /** [ユーザ設定] ダークテーマ */
-    private darkTheme
+    private darkTheme:boolean;
 
     /** ファイル監視 */
     watcher:Watcher;
@@ -32,13 +34,15 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
     context:vscode.ExtensionContext;
 
     constructor(private _context: vscode.ExtensionContext){
-        // vscode.window.onDidChangeActiveTextEditor(() => this.onActiveEditorChanged());
+        vscode.window.onDidChangeActiveTextEditor((e) => this.onActiveEditorChanged(e));
         // vscode.workspace.onDidChangeTextDocument(e => this.onDocumentChanged(e));
 
         // 設定を取得する。
         this.autoRefresh = vscode.workspace.getConfiguration('plotexr').get<boolean>('autorefresh');
         this.analyzeLog = vscode.workspace.getConfiguration('plotexr').get<boolean>('analyzelog');
+        this.interval = vscode.workspace.getConfiguration('plotexr').get<number>('interval');
         this.darkTheme = vscode.workspace.getConfiguration('plotexr').get<boolean>('darktheme');
+
         // 設定の更新時の処理
 		vscode.workspace.onDidChangeConfiguration((e:vscode.ConfigurationChangeEvent) => {
             if(e.affectsConfiguration('plotexr.autorefresh')){
@@ -51,19 +55,23 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
                 if(!this.autoRefresh && !this.analyzeLog){ this.watcher.replace([]); }
                 else{ this.watcher.replace(this.plot.getChapterFiles());}
             }
+            if(e.affectsConfiguration('plotexr.interval')){
+                this.interval = vscode.workspace.getConfiguration('plotexr').get<number>('interval');
+                if(this.autoRefresh || this.analyzeLog){ this.watcher.replace(this.plot.getChapterFiles()); }
+            }
             if(e.affectsConfiguration('plotexr.darktheme')){
                 this.darkTheme = vscode.workspace.getConfiguration('plotexr').get<boolean>('darktheme');
             }
         });
         // 監視処理
         // ※ function にすると、this参照が関数になるので、このハンドラはアロー関数で実装する
-        this.watcher = new Watcher((file:string, date:Date, size:number, diff:number)=>{
+        this.watcher = new Watcher((file:string, date:Date, size:number, diff:number, elapsed:number)=>{
             // console.log('file on change: ', file);
             // ログの出力
             if(this.analyzeLog)
             {
                 const fileName = path.basename(file);
-                save({date:date, file:fileName, size:size, diff:diff});
+                save({date:date, file:fileName, size:size, diff:diff, elapsed:elapsed});
             }
 
             // ツリービュー要素の更新
@@ -184,6 +192,8 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
         this._onDidChangeTreeData.fire(undefined);
         // ファイル監視対象を更新
         this.watcher.replace(this.plot.getChapterFiles());
+        // アクティブエディタを更新
+        this.onActiveEditorChanged(vscode.window.activeTextEditor);
     }
 
     /** ファイルを開く
@@ -650,9 +660,24 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
     }
     
     // /** アクティブなエディタの切り替えイベント */
-    // private onActiveEditorChanged(): void
-    // {
-    // }
+    private onActiveEditorChanged(e:vscode.TextEditor): void
+    {
+        if(e && e.document)
+        {
+            // console.log(e.document.fileName);
+            // 管理しているファイルのみ
+            if(this.plot.chapters.find(c=> path.basename(c.fileElement.value) === path.basename(e.document.fileName)))
+            {
+                this.watcher.startTimespan(e.document.fileName);
+            }
+        }
+        else
+        {
+            // console.log('no document.');
+            // エディタが空
+            this.watcher.startTimespan("");
+        }
+    }
 
     // private onDocumentChanged(changeEvent: vscode.TextDocumentChangeEvent): void
     // {

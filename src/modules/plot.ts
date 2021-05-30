@@ -7,16 +7,6 @@ import { Element, ElementType } from "./element";
 /** プロットを表すクラス */
 export class Plot
 {
-    /** タイトル
-     * 
-     * 未指定の場合、空白文字
-     */
-    // title:string;
-    /** 概要
-     * 
-     * 未指定の場合、空白文字
-     */
-    // description:string;
     /** 章立ての一覧 */
     chapters:Chapter[] = [];
     /** 章立て要素の一覧 */

@@ -216,6 +216,11 @@
 					"default": true,
 					"description": "対象ファイルの更新時に、ツリービューの表示を自動更新する。"
 				},
+				"plotexr.interval": {
+					"type": "number",
+					"default": 3000,
+					"description": "ファイルの変更監視インターバル（ミリ秒）。短くしすぎると、負荷が高まる可能性あり。"
+				},
 				"plotexr.analyzelog": {
 					"type": "boolean",
 					"default": true,

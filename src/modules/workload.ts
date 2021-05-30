@@ -19,6 +19,21 @@ interface Workload {
 	elapsed:number;
 }
 
+/** 作業時間 */
+export interface PreviousTime {
+	/** ファイル */
+	file:string;
+	/** 開始時間（Date） */
+	time:number;
+}
+
+export interface StackedTime{
+	/** ファイル */
+	file:string;
+	/** 積み上げ時間（分） */
+	time:number;
+}
+
 
 /** 作業量を保存する */
 export function save(workload:Workload)
@@ -28,38 +43,64 @@ export function save(workload:Workload)
 		filename: getWorkloadFile().fsPath,
 		autoload: true
 	});
-	const db2 = new nedb({
-		filename: getWorkloadLogFile().fsPath,
-		autoload:true
-	});
+	// const db2 = new nedb({
+	// 	filename: getWorkloadLogFile().fsPath,
+	// 	autoload:true
+	// });
 	// 日付に丸める
-	const date = new Date(
+	// const date = new Date(
+	workload.date = new Date(
 		workload.date.getFullYear(),
 		workload.date.getMonth(),
 		workload.date.getDate(),
 		0,0,0
 	);
-	db.find({file:workload.file, date:date},(err:any,rows:Workload[])=>{
-		if(rows.length > 0){
-			// 同日の作業量を合算
-			db.update(
-				{file:workload.file, date:date},
-				{$inc:{
-					size:workload.size,
-					diff:workload.diff
-				}});
-		}else{
-			// 登録
-			db.insert({
-				file:workload.file,
-				date:date,
-				size:workload.size,
-				diff:workload.diff,
-			});
-		}
-	});
+
+	db.update(
+		{
+			$and:[
+				{date:workload.date},
+				{file:workload.file},
+			]
+		},
+		{
+			$set:{
+				date: workload.date,
+				file: workload.file,
+				size: workload.size,
+			},
+			$inc:{
+				diff: workload.diff,
+				elapsed: workload.elapsed
+			}
+		},
+		{upsert:true},
+		// (err, updated, upsert)=>{ console.log(`nedb.update(). updated: ${updated}, upsert: ${JSON.stringify(upsert)}, err: ${err}`); }
+	);
+	// db.find({file:workload.file, date:workload.date},(err:any,rows:Workload[])=>{
+	// 	if(rows.length > 0){
+	// 		// 同日の作業量を合算
+	// 		db.update(
+	// 			{file:workload.file, date:workload.date},
+	// 			{$inc:{
+	// 				size:workload.size,
+	// 				diff:workload.diff,
+	// 				elapsed:workload.elapsed,
+	// 			}});
+	// 	}else{
+	// 		// 登録
+	// 		db.insert(workload);
+	// 		// db.insert({
+	// 		// 	file:workload.file,
+	// 		// 	date:date,
+	// 		// 	size:workload.size,
+	// 		// 	diff:workload.diff,
+	// 		// 	elapsed:workload.elapsed,
+	// 		// });
+	// 	}
+	// });
 	// 詳細ログをそのまま出力
-	db2.insert(workload);
+	// db2.insert(workload);
 }
 
 /** 読み込み */
