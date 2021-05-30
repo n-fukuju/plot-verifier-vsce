@@ -235,6 +235,10 @@ export async function analyze(context:vscode.ExtensionContext, achievements:any[
 									<option value="month">今月</option>
 								</select>
 							</div>
+							<div class="col-2">
+								<input type="checkbox" class="btn-check" id="btnElapsed" autocomplete="off">
+								<label class="btn btn-sm btn-outline-light" for="btnElapsed">elapsed</label>
+							</div>
 						</div>
 						<div id="daily"></div>
 					</div>

@@ -28,7 +28,8 @@ for(let day=1;day<=14;day++){
             date: new Date(2021,0,day, 9,0,0),  // 月は0始まり。
             file: 'file1.txt',
             size: size1 += d1,
-            diff: d1
+            diff: d1,
+            elapsed: d1 * 10,
         }, (err)=>{
             if(err){ console.log('nedb error: ', err); }
         });
@@ -38,7 +39,8 @@ for(let day=1;day<=14;day++){
             date: new Date(2021,0,day, 9,0,0),
             file: 'file2.txt',
             size: size2 += d2,
-            diff: d2
+            diff: d2,
+            elapsed: d2 * 10,
         }, (err)=>{
             if(err){ console.log('nedb error: ', err); }
         });
