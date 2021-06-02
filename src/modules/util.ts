@@ -14,17 +14,17 @@ export async function getPlot(refresh=false): Promise<Plot>
         {
             const plotData = await vscode.workspace.fs.readFile(plotFile);
             plot = Buffer.from(plotData).toString('utf8');
-        } else { console.log('plot ファイルが存在しません。: ', plotFile.fsPath); }
+        } else { console.log('ファイルが存在しません。: ', plotFile.fsPath); }
 
         try{
             const p = new Plot(getWorkspaceFolder(), plotFile, JSON.parse(plot));
             return Promise.resolve(p);
         } catch(e){
-            console.log('plot ファイルを開けませんでした。: ', e);
-            return Promise.reject('plot ファイルを開けませんでした。');
+            console.log('ファイルを開けませんでした。: ', e);
+            return Promise.reject('ファイルを開けませんでした。');
         }
     }else{
-        return Promise.reject('plot ファイルを開けませんでした。');
+        return Promise.reject('ファイルを開けませんでした。');
     }
 }
 

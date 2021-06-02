@@ -62,8 +62,8 @@ export class Watcher {
         // * 経過時間の出力はファイル保存のタイミングのみ
         if(file !== this.previousTime.file)
         {
-            const diff = Math.floor( (time - this.previousTime.time) /1000 /60 );
-            const stacked = this.stackedTimes.find(s=>s.file==this.previousTime.file);
+            const diff = Math.floor( (time - this.previousTime.time) /1000 );
+            const stacked = this.stackedTimes.find(s=>s.file===this.previousTime.file);
             if(stacked)
             {
                 // 作業時間を加算
@@ -93,7 +93,7 @@ export class Watcher {
         // いったん積み上げ
         this.startTimespan(file);
         // 経過時間の累積を取得してクリアする
-        const stacked = this.stackedTimes.find(s=>s.file==file);
+        const stacked = this.stackedTimes.find(s=>s.file===file);
         if(stacked)
         {
             elapsed += stacked.time;

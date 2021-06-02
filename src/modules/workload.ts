@@ -56,6 +56,7 @@ export function save(workload:Workload)
 		0,0,0
 	);
 
+	// nedb にDateで保存するとなぜか取り出し時に値がずれているため、Date.getTime() を保存する。
 	db.update(
 		{
 			$and:[
@@ -65,7 +66,8 @@ export function save(workload:Workload)
 		},
 		{
 			$set:{
-				date: workload.date,
+				// date: workload.date,
+				time: workload.date.getTime(),
 				file: workload.file,
 				size: workload.size,
 			},
@@ -110,14 +112,24 @@ function getWorkload(){
 			filename: getWorkloadFile().fsPath,
 			autoload: true
 		});
-		db.find({}).sort({date:1}).exec((err:any,workloads:Workload[])=>{
+		// FIXME: NEDBから取り込んだDateが、翌日になっている。また末二日が同日に。
+		db.find({}).sort({time:1}).exec((err:any,docs:any[])=>{
 			if(err){ reject(err); }
-			// console.log(workloads);
 			
 			// ファイルごと、全ファイル、のデータを作成する
 			let wls = {all:[]};
-			for(let wl of workloads)
+			// for(let wl of workloads)
+			for(let doc of docs)
 			{
+				const wl = {
+					date: new Date(doc.time),
+					file: doc.file,
+					size: doc.size,
+					diff: doc.diff,
+					elapsed: doc.elapsed
+				};
+				// 確認
+				// console.log(`file: ${wl.file}, date: ${wl.date}, date2: ${new Date(wl.time)}`);
 				// 各ファイル
 				if(Object.keys(wls).includes(wl.file))
 				{
@@ -126,16 +138,18 @@ function getWorkload(){
 					wls[wl.file] = [wl];
 				}
 				// 全ファイル
-				let i = wls['all'].findIndex(w=>w.date.getTime() == wl.date.getTime());
+				let i = wls['all'].findIndex(w=>w.date.getTime() === wl.date.getTime());
 				if(i>=0){
 					wls['all'][i].size += wl.size;
 					wls['all'][i].diff += wl.diff;
+					wls['all'][i].elapsed += wl.elapsed;
 				}else{
 					wls['all'].push({
 						file: 'all',
 						date: wl.date,
 						size: wl.size,
 						diff: wl.diff,
+						elapsed: wl.elapsed,
 					});
 				}
 			}
@@ -231,8 +245,8 @@ export async function analyze(context:vscode.ExtensionContext, achievements:any[
 							<div class="col-2">
 								<select id="range" class="form-select form-select-sm">
 									<option value="all" selected>全期間</option>
-									<option value="week">今週</option>
-									<option value="month">今月</option>
+									<option value="week">一週間</option>
+									<option value="month">一ヶ月</option>
 								</select>
 							</div>
 							<div class="col-2">
@@ -244,16 +258,32 @@ export async function analyze(context:vscode.ExtensionContext, achievements:any[
 					</div>
 
 					<!-- ファイルごと進捗 -->
+					<div class="text-center">
+						<h2>progress</h2>
+					</div>
 					<div id="gaugeArea" class="container">
 					</div>
 				</main>
 				
 				<script>
+					var selectedFile = "all";
+					var range = "all";
+					var viewElapsed = false;
+					var now = new Date();
+					var xWeek = now;
+					var xMonth = now;
 					// stringify() した時点で、.date は string になっている。
 					var workloads = ${JSON.stringify(workloads)};
 					var achievements = ${JSON.stringify(achievements)};
+					xWeek = new Date(now.setDate(now.getDate()-7));
+					xMonth = new Date(now.setMonth(now.getMonth()-2));
+					console.log('now: ', now.toString());
+					console.log('xWeek: ', xWeek.toString());
+					console.log('xMonth: ', xMonth.toString());
 					// generate selector
 					var select = $("#file");
+					var selectRange = $("#range");
+					var checkElapsed = $("#btnElapsed");
 					for(var file of Object.keys(workloads))
 					{
 						select.append($("<option>").text(file).val(file));
@@ -262,7 +292,7 @@ export async function analyze(context:vscode.ExtensionContext, achievements:any[
 						select.val(Object.keys(workloads)[0]);
 					}
 					// console.log(workloads);
-					console.log(achievements);
+					// console.log(achievements);
 					var daily = c3.generate({
 						bindto: '#daily',
 						data: {
@@ -271,20 +301,27 @@ export async function analyze(context:vscode.ExtensionContext, achievements:any[
 								['x'],
 								['size'],
 								['diff'],
+								['elapsed']
 							],
 							// columns: {JSON.stringify(daily)}
 							// 	,
-								axes: { diff: 'y2'},
-								types: { size: 'bar' }
+							axes: { diff: 'y2'},
+							types: { size: 'bar', diff: 'area', elapsed: 'area' }
 						},
 						axis: {
 							x: {
 								type: 'timeseries',
 								tick: { format: '%Y-%m-%d' }
 							},
-							y: {label: {text: 'size'}},
+							y: {label: {
+								text: 'size (word count)',
+								position: 'outer-middle'
+							}},
 							y2: {
-								label: {text: 'diff'},
+								label: {
+									text: 'diff (word count)',
+									position: 'outer-middle'
+								},
 								show: true
 							}
 						},
@@ -292,6 +329,8 @@ export async function analyze(context:vscode.ExtensionContext, achievements:any[
 							pattern: ['#ffbb78', '#aec7e8', '#2ca02c']
 						}
 					});
+					daily.hide(['elapsed']);
+					// console.log(daily);
 
 					// データを後からロードすると、アニメーションしてくれるので見栄えがする
 					daily.load({
@@ -302,17 +341,65 @@ export async function analyze(context:vscode.ExtensionContext, achievements:any[
 							['x'].concat(workloads.all.map((w)=>{return w.date.substring(0,10) })),
 							['size'].concat(workloads.all.map((w)=>{return w.size})),
 							['diff'].concat(workloads.all.map((w)=>{return w.diff})),
+							['elapsed'].concat(workloads.all.map((w)=>{return w.elapsed})),
 						]
 					});
+					// ファイルの切り替え
 					select.change(()=>{
-						var filename = select.val();
-						daily.load({
-							columns: [
-								['x'].concat(workloads[filename].map((w)=>{return w.date.substring(0,10); })),
-								['size'].concat(workloads[filename].map((w)=>{return w.size; })),
-								['diff'].concat(workloads[filename].map((w)=>{return w.diff; }))
-							]
-						});
+						selectedFile = select.val();
+						if(!viewElapsed){
+							daily.load({
+								columns: [
+									['x'].concat(workloads[selectedFile].map((w)=>{return w.date.substring(0,10); })),
+									['size'].concat(workloads[selectedFile].map((w)=>{return w.size; })),
+									['diff'].concat(workloads[selectedFile].map((w)=>{return w.diff; })),
+								]
+							});
+						}else{
+							daily.load({
+								columns: [
+									['x'].concat(workloads[selectedFile].map((w)=>{return w.date.substring(0,10); })),
+									['size'].concat(workloads[selectedFile].map((w)=>{return w.size; })),
+									['diff'].concat(workloads[selectedFile].map((w)=>{return w.diff; })),
+									['elapsed'].concat(workloads[selectedFile].map((w)=>{return w.elapsed; })),
+								]
+							});
+						}
+					});
+					// 期間の切り替え
+					selectRange.change(()=>{
+						range = selectRange.val();
+						if(range === 'week'){
+							// console.log('range week: ', xWeek);
+							daily.axis.range({min:{x: xWeek}});
+						}else if(range === 'month'){
+							// console.log('range month: ', xMonth);
+							daily.axis.range({min:{x: xMonth}});
+						}else{
+							// ファイルごとの最小値
+							// console.log('range all: ', workloads[selectedFile][0].date);
+							daily.axis.range({min:{x: new Date(workloads[selectedFile][0].date)}});
+						}
+					});
+					// 時間の表示/非表示
+					checkElapsed.change(async()=>{
+						viewElapsed = checkElapsed.prop('checked');
+						// console.log('elapsed: ', viewElapsed);
+						if(viewElapsed){
+							// y2軸の単位を、時間にする。
+							daily.axis.labels({y:'size,diff (word count)', y2:'elapsed (minutes)'});
+							daily.show(['elapsed']);
+							daily.load({
+								axes: {elapsed:'y2'},
+								columns: [
+									['elapsed'].concat(workloads[selectedFile].map(w=>{return w.elapsed; }))
+								]
+							});
+						} else {
+							daily.axis.labels({y:'size (word count)', y2:'diff (word count)'});
+							daily.hide(['elapsed']);
+							daily.load({axes: {diff:'y2'}});
+						}
 					});
 
 					var area = $("#gaugeArea");

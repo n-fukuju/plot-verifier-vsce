@@ -57,6 +57,7 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
             }
             if(e.affectsConfiguration('plotexr.interval')){
                 this.interval = vscode.workspace.getConfiguration('plotexr').get<number>('interval');
+                this.watcher.interval = this.interval;
                 if(this.autoRefresh || this.analyzeLog){ this.watcher.replace(this.plot.getChapterFiles()); }
             }
             if(e.affectsConfiguration('plotexr.darktheme')){
@@ -87,7 +88,7 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
                     }
                 }
             }
-        });
+        }, this.interval);
 
         // 拡張機能のローカルパス
         this.context = _context;
