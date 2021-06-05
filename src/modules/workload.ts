@@ -272,14 +272,16 @@ export async function analyze(context:vscode.ExtensionContext, achievements:any[
 					var now = new Date();
 					var xWeek = now;
 					var xMonth = now;
-					// stringify() した時点で、.date は string になっている。
-					var workloads = ${JSON.stringify(workloads)};
-					var achievements = ${JSON.stringify(achievements)};
 					xWeek = new Date(now.setDate(now.getDate()-7));
-					xMonth = new Date(now.setMonth(now.getMonth()-2));
+					now = new Date();
+					xMonth = new Date(now.setMonth(now.getMonth()-1));
+					now = new Date();
 					console.log('now: ', now.toString());
 					console.log('xWeek: ', xWeek.toString());
 					console.log('xMonth: ', xMonth.toString());
+					// stringify() した時点で、.date は string になっている。
+					var workloads = ${JSON.stringify(workloads)};
+					var achievements = ${JSON.stringify(achievements)};
 					// generate selector
 					var select = $("#file");
 					var selectRange = $("#range");
@@ -419,21 +421,42 @@ export async function analyze(context:vscode.ExtensionContext, achievements:any[
 							colCount = 1;
 						}
 						
+						// 上限指定か下限指定かで色を変える
+						var color = {
+							pattern: ['#FF0000', '#F97600', '#F6C600', '#60B044'],
+							threshold:{
+								values:[30, 60, 90, 100]
+							}
+						}
+						if(ac.type === 'maximum'){
+							color = {
+								pattern:['#60B044', '#F6C600', '#F97600'],
+								threshold:{
+									values:[100,95,90]
+								}
+							}
+						}
 						// チャート生成
 						var chart = c3.generate({
 							bindto: "#" + id,
 							data:{ columns:[], type: 'gauge'},
 							gauge: {},
-							color: {
-								pattern: ['#FF0000', '#F97600', '#F6C600', '#60B044'],
-								threshold:{
-									values:[30, 60, 90, 100]
-								}
-							},
+							// color: {
+							// 	pattern: ['#FF0000', '#F97600', '#F6C600', '#60B044'],
+							// 	threshold:{
+							// 		values:[30, 60, 90, 100]
+							// 	}
+							// },
+							color: color,
 							tooltip: { show: false }
 						})
+						var displayName = '';
+						if(ac.type === 'minimum'){ displayName = ' [最小項目]'; }
+						else if(ac.type === 'maximum'){ displayName = ' [最大項目]'; }
+						else if(ac.type === 'condition'){ displayName = ' [記述項目]'; }
+						displayName = ac.file + displayName;
 						chart.load({
-							columns:[[ac.file, ac.achievement]]
+							columns:[[displayName, ac.achievement]]
 						});
 					}
 

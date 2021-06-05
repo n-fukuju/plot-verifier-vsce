@@ -708,7 +708,16 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
             // 最小項目の達成率
             plot.minimumElements.forEach((elm)=>{
                 achievements.push({
-                    file: filename + " [最小項目]",
+                    file: filename,
+                    type: 'minimum',
+                    value: elm.label,
+                    achievement: elm.achievement
+                });
+            });
+            plot.maximumElements.forEach((elm)=>{
+                achievements.push({
+                    file: filename,
+                    type: 'maximum',
                     value: elm.label,
                     achievement: elm.achievement
                 });
@@ -718,7 +727,8 @@ export class PlotVerifyProvider implements vscode.TreeDataProvider<Element>{
                 let count = plot.conditionElements.length;
                 let count2 = plot.conditionElements.filter(elm=>!elm.isError).length;
                 achievements.push({
-                    file: filename + " [記述項目]",
+                    file: filename,
+                    type: 'condition',
                     value: "",
                     achievement: count2 / count * 100
                 });
