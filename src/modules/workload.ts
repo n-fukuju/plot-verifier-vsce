@@ -430,9 +430,9 @@ export async function analyze(context:vscode.ExtensionContext, achievements:any[
 						}
 						if(ac.type === 'maximum'){
 							color = {
-								pattern:['#60B044', '#F6C600', '#F97600'],
+								pattern:['#60B044', '#F6C600', '#F97600', '#FF0000'],
 								threshold:{
-									values:[100,95,90]
+									values:[90,95,99,100]
 								}
 							}
 						}
